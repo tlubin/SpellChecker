@@ -1,3 +1,4 @@
 TODO's LIST:
 
+-make sure dev branch in git is working
 -all New Files should be added to the Makefile
