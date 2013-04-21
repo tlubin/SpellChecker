@@ -1,9 +1,12 @@
-open Type
+module type NFA =
+sig
+  type nfa_t
 
-(*module state_t : (Map.OrderedType with type t=state) =
-  type t = state
-  let compare s1 s2 = 
-    cmp s1 s2
-*)
+  (** build an nfa_t for a given input word *)
+  val build: string -> nfa_t
+    (* stuff for powerset construction *)
+    (* add_state, ... *)
+end
 
-module nfa = Map.Make(state_t);;
+module Nfa : NFA =
+  failwith "implement me"
