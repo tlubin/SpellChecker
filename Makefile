@@ -14,6 +14,12 @@ CAMLFLAGS = -g
 # Source and Object files
 SRC = \
 	main.ml \
+	type.ml \
+	lev.ml \
+	dict.ml \
+	dfa.ml \
+	nfa.ml \
+	
 
 OBJ = $(SRC:.ml=.cmo)
 
