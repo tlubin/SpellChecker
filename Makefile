@@ -19,7 +19,6 @@ SRC = \
 	dict.ml \
 	dfa.ml \
 	nfa.ml \
-	
 
 OBJ = $(SRC:.ml=.cmo)
 
