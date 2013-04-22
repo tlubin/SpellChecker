@@ -59,8 +59,7 @@ struct
     Type.StateSet.mem state final_states
 
 
-
-  let tran_types = [Delete | Insert | Swap]
+  let tran_types = [Delete | Insert | Swap | '$']
 
   (* Build NFA Helpers *)
 
@@ -69,7 +68,7 @@ struct
 
 
   (* Build NFA Main Function *)
-  let build (str: string) (d: int) =
+  let build (str: string) (edit_d: int) =
     let add_transition (transitions: Type.StateDict) (src: Type.state) (tran: tran) (dest: Type.state) =
       (* check if our starting state already exists in state dictionary *)
       (* do asserts here later for overwriting *)
@@ -79,16 +78,29 @@ struct
         Type.StateDict.add src inner_dict
       else
         let t_dict = Type.TranDict.singleton tran dest in
-        Type.StateDict.add tran dest 
-        
+        Type.StateDict.add src t_dict
     in
-    let expand states = 
+    let rec build_from_string str i e t_types transitions =
+      if i < String.length str then begin
+        if e <= edit_d then 
+          begin
+            let len = String.length str in
+            match t_types with
+            | [] -> build_from_string str i e+1 tran_types transitions
+            | '$'::tl -> build_from_string str i e+1 tl (add_transition  (len, e) (String.get str i) (len, e+1))
+            | Delete::tl -> build_from_string str i e+1 tl (add_transition transitions (i,e) Delete (i, e+1))
+            | Insert::tl -> build_from_string str i e+1 tl (add_transition transitions (i,e) Insert (i+1, e+1))
+            | Swap::tl -> build_from_string str i e+1 tl (add_transition transitions (i,e) Swap (i+1, e+1))
+          end
+        end
+        build_from_string str i+1 0 tran_types transitions
+      else 
+        transitions
+    in 
     let final_states = Type.StateSet.empty in
     let transitions = Type.StateDict.empty in
     let starting_state = (0,0) in
-
-    failwith "implement build"
-
+    build_from_string str 0 0 tran_types transitions
 
 end
   
