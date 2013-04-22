@@ -35,30 +35,32 @@ struct
   (* transitions dictionary * starting state * final states *)
   type nfa_t = Type.automata
 
+  let tran_types = [Delete | Insert | Swap]
 
   (* Build NFA Helpers *)
 
   (* return empty nfa *)
   (*let empty = *)
-    
-
-
-  let add_transition
 
 
   (* Build NFA Main Function *)
   let build (str: string) (d: int) =
     let add_transition (transitions: Type.StateDict) (src: Type.state) (tran: tran) (dest: Type.state) =
-      let t_dict = ref TranDict.empty in
-      t_dict := !
-      transitions.add src dest 
+      (* check if our starting state already exists in state dictionary *)
+      (* do asserts here later for overwriting *)
+      if Type.StateDict.mem src transitions then
+        let inner_dict = Type.StateDict.find src transitions in
+        let inner_dict = Type.TranDict.add tran dest inner_dict in
+        Type.StateDict.add src inner_dict
+      else
+        let t_dict = Type.TranDict.singleton tran dest in
+        Type.StateDict.add tran dest 
+        
     in
     let expand states = 
     let final_states = Type.StateSet.empty in
     let transitions = Type.StateDict.empty in
     let starting_state = (0,0) in
-
-    let 
 
     failwith "implement build"
 

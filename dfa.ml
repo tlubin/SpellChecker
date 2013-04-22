@@ -7,7 +7,7 @@ sig
   (** return the next valid string satisfying the dfa *)
   val next_valid_string: string -> string
 
-    (* stuff needed to build the dfa. i.e. add_transition,... *)
+    (* stuff neded to build the dfa. i.e. add_transition,... *)
   
   (* singleton returns a dfa, with given start state *)
   val singleton: Type.state -> dfa_t
