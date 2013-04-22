@@ -69,7 +69,9 @@ struct
 
   (* Build NFA Main Function *)
   let build (str: string) (edit_d: int) =
-    let add_transition (transitions: Type.StateDict) (src: Type.state) (tran: tran) (dest: Type.state) =
+    let final_states = ref Type.StateSet.empty in
+    let add_transition (transitions: Type.StateDict) (src: Type.state) 
+      (tran: tran) (dest: Type.state) =
       (* check if our starting state already exists in state dictionary *)
       (* do asserts here later for overwriting *)
       if Type.StateDict.mem src transitions then
@@ -82,30 +84,31 @@ struct
     in
     (* TODO: Still need to keep updating final_states *)
     let rec build_from_string str i e t_types transitions =
-      if i < String.length str then begin
+      let len = String.length str in
+      if i < len then begin
         if e <= edit_d then 
           begin
-            let len = String.length str in
             match t_types with
-            | [] -> build_from_string str i e+1 tran_types transitions
+            | [] -> build_from_string str i e+1 tran_types transitions 
             | '$'::tl -> build_from_string str i e+1 tl 
               (add_transition  (len, e) (String.get str i) (len, e+1))
             | Delete::tl -> build_from_string str i e+1 tl 
-              (add_transition transitions (i,e) Delete (i, e+1))
+              (add_transition transitions (i,e) Delete (i, e+1)) 
             | Insert::tl -> build_from_string str i e+1 tl 
-              (add_transition transitions (i,e) Insert (i+1, e+1))
+              (add_transition transitions (i,e) Insert (i+1, e+1)) 
             | Swap::tl -> build_from_string str i e+1 tl 
-              (add_transition transitions (i,e) Swap (i+1, e+1))
+              (add_transition transitions (i,e) Swap (i+1, e+1)) 
           end
         end
-        build_from_string str i+1 0 tran_types transitions
+        final_states := Type.StateSet.add (len, e) (!final_states)
+        build_from_string str i+1 0 tran_types transitions 
       else 
         transitions
     in 
     let final_states = Type.StateSet.empty in
     let transitions = Type.StateDict.empty in
     let starting_state = (0,0) in
-    ((build_from_string str 0 0 tran_types transitions), starting_state, (*final states here *))
+    ((build_from_string str 0 0 tran_types transitions), starting_state, final_states)
 
 end
   
