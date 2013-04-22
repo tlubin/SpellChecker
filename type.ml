@@ -1,4 +1,8 @@
+(* letters consumed * number of edits *)
 type state = int*int
+
+(* transitions dictionary * start state * final states *)
+type automata = Type.StateDict * Type.state * Type.StateSet
 
 module StateSet = Set.Make(
 struct
@@ -18,8 +22,3 @@ struct
   let compare a b = compare a b
 end)
 
-module DfaTranDict = Map.Make(
-struct
-  type t = Dfa.tran
-  let compare a b = compare a b
-end)
