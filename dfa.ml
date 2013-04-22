@@ -5,7 +5,7 @@ sig
   type dfa_t
   
   (* return the next valid string satisfying the dfa *)
-  val next_valid_string: string -> string
+  val next_valid_string: dfa_t -> string -> string
 
   (* singleton returns a dfa, with given start state *)
   val singleton: Type.state -> dfa_t
@@ -29,12 +29,49 @@ struct
       let compare a b = compare a b
     end)
 
+  (* Helper Functions for next_valid_string *)
+  let start_state my_dfa =
+    let _, start, _ = my_dfa in start
+
+  let next_state my_dfa state tran: Type.state option =
+    let trans_dict, _, _ = my_dfa in
+    assert(Type.StateDict.mem state trans_dict);
+    let inner_dict = Type.StateDict.find state trans_dict in
+    if not (TranDict.mem tran inner_dict) then None
+    else Some TranDict.find tran inner_dict
+
+  let is_final my_dfa state =
+    let _, _. final_states = my_dfa in Type.StateSet.mem state final_states
+
   (* get the next valid lexigraphical string in the DFA *)
-  let next_valid_string current =
-    failwith "todo"
+  (* INCOMPLETE IMPLEMENTATION *)
+  let next_valid_string my_dfa str =
+    let state = start_state my_dfa in
+    let stack = [] in
+    (* evaluate the dfa as far as possible *)
+    let rec evaluate_dfa current_state depth stack  =
+      if depth = String.length str then (stack*current_state)
+      else 
+	let letter = String.sub str depth (depth+1) in
+	let str_so_far = String.sub str 0 (depth+1) in
+	match next_state my_dfa current_state (Correct letter) with
+	  | None ->
+	    (* add a dummy state of (-1,-1) to the stack *)
+	    let state = (-1,-1) in
+	    let stack = (str_so_far, state, letter)::stack in
+	    (stack, state)
+	  | Some s -> 
+	    let stack = (str_so_far, s, letter) in
+	    evaluate_dfa s (depth+1) stack in
+    let stack, state = evaluate_dfa state 0 stack in
+    if is_final my_dfa state then str (* word is valid *) 
+    else
+      failwith "implement the rest of this function"
+
 
   (* return a singleton dfa with the given state *)
-  let singleton (state: Type.state) = Type.StateDict.singleton state (TranDict.empty)
+  let singleton (state: Type.state) = 
+    Type.StateDict.singleton state (TranDict.empty)
 
   (* add a transition from orig to dest using transition type trans *)
   let add_transition my_dfa orig trans dest =
