@@ -86,7 +86,7 @@ struct
           begin
             let len = String.length str in
             match t_types with
-            | [] -> build_from_string str i e+1 tran_types
+            | [] -> build_from_string str i e+1 tran_types transitions
             | '$'::tl -> build_from_string str i e+1 tl (add_transition  (len, e) (String.get str i) (len, e+1))
             | Delete::tl -> build_from_string str i e+1 tl (add_transition transitions (i,e) Delete (i, e+1))
             | Insert::tl -> build_from_string str i e+1 tl (add_transition transitions (i,e) Insert (i+1, e+1))
