@@ -1,3 +1,5 @@
+type tran = Correct of char | Delete | Insert | Swap
+
 module type NFA =
 sig
   type nfa_t

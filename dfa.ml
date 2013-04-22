@@ -1,3 +1,5 @@
+type tran = Correct of char | Other
+
 module type DFA =
 sig
   type dfa_t

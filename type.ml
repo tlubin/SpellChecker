@@ -1,2 +1,7 @@
 type state = int*int
-type transition = Correct of char | Delete | Insert | Swap
+
+module StateSet = Set.Make(
+struct
+  type t = int*int
+  let compare a b = compare a b
+end)
