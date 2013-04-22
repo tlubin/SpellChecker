@@ -33,40 +33,56 @@ struct
   let start_state my_dfa =
     let _, start, _ = my_dfa in start
 
+  (* get the next state from a current state. try to go by transition
+     tran but otherwise go by Other *)
   let next_state my_dfa state tran: Type.state option =
     let trans_dict, _, _ = my_dfa in
     assert(Type.StateDict.mem state trans_dict);
     let inner_dict = Type.StateDict.find state trans_dict in
-    if not (TranDict.mem tran inner_dict) then None
-    else Some TranDict.find tran inner_dict
+    match (TranDict.mem tran inner_dict), (TranDict.mem Other inner_dict) with
+      | true, _ -> Some (TranDict.find tran inner_dict)
+      | false, true -> Some (TranDict.find Other inner_dict)
+      | false, false -> None
 
   let is_final my_dfa state =
     let _, _. final_states = my_dfa in Type.StateSet.mem state final_states
 
   (* get the next valid lexigraphical string in the DFA *)
   (* INCOMPLETE IMPLEMENTATION *)
-  let next_valid_string my_dfa str =
-    let state = start_state my_dfa in
-    let stack = [] in
+  let next_valid_string my_dfa str : string option =
     (* evaluate the dfa as far as possible *)
     let rec evaluate_dfa current_state depth stack  =
-      if depth = String.length str then (stack*current_state)
+      let letter : string option = (
+	if depth = (String.length str) then None
+	else String.sub str depth 1) in (* next letter to be consumed *)
+      let str_so_far = String.sub str 0 depth in (* what has been consumed so far *)
+      let stack = (str_so_far, current_state, letter)::stack in (* add the current info the the stack *)
+      if depth = (String.length str) then (stack*current_state)
       else 
-	let letter = String.sub str depth (depth+1) in
-	let str_so_far = String.sub str 0 (depth+1) in
 	match next_state my_dfa current_state (Correct letter) with
 	  | None ->
 	    (* add a dummy state of (-1,-1) to the stack *)
-	    let state = (-1,-1) in
-	    let stack = (str_so_far, state, letter)::stack in
+	    let state = (-1, -1) in
+	    let letter' = String.sub str (depth+1) 1 in
+	    let str_so_far' = String.sub str 0 (depth+1) in
+	    let stack = (str_so_far', state, letter')::stack in
 	    (stack, state)
-	  | Some s -> 
-	    let stack = (str_so_far, s, letter) in
-	    evaluate_dfa s (depth+1) stack in
-    let stack, state = evaluate_dfa state 0 stack in
-    if is_final my_dfa state then str (* word is valid *) 
+	  | Some s -> evaluate_dfa s (depth+1) stack in
+    let stack, state = evaluate_dfa (start_state my_dfa) 0 [] in
+    if is_final my_dfa state then Some str (* word is valid *) 
     else
-      failwith "implement the rest of this function"
+      let rec wall_search stack : string option =
+	match stack with
+	  | [] -> None
+	  | (str_so_far, state, next_letter)::tl ->
+	    match find_next_edge my_dfa state next_letter with
+	      | None -> wall_search tl
+	      | Some path -> Some (str_so_far ^ path) in
+      wall_search stack
+
+  
+  let rec find_next_edge my_dfa current_state letter : string option =
+    
 
 
   (* return a singleton dfa with the given state *)
