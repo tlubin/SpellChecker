@@ -8,6 +8,17 @@ sig
   val next_valid_string: string -> string
 
     (* stuff needed to build the dfa. i.e. add_transition,... *)
+  
+  (* singleton returns a dfa, with given start state *)
+  val singleton: Type.state -> dfa_t
+
+  (* add a transition (cur state, transition, new state) to the dfa *)
+  val add_transition: 
+    dfa_t -> Type.state -> tran -> Type.state -> dfa_t
+
+  (* add to final states *)
+  val add_final: dfa_t -> Type.state -> dfa_t 
+
 end
 
 module Dfa : DFA =
