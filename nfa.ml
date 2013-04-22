@@ -106,10 +106,10 @@ struct
         final_states := Type.StateSet.add (len, e) (!final_states)
         build_from_string str i+1 0 tran_types
       else 
-        transitions
+        !transitions
     in
     let starting_state = (0,0) in
-    ((build_from_string str 0 0 tran_types transitions), starting_state, final_states)
+    ((build_from_string str 0 0 tran_types !transitions), starting_state, !final_states)
 
 end
   
