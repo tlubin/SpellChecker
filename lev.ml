@@ -31,7 +31,7 @@ struct
     let rec add_transitions my_dfa (origin: Type.state) (trans : Nfa.tran list)
 	(frontier: Type.state list)  (seen: Type.StateSet)  =
       match trans with
-	| [] -> my_dfa
+	| [] -> build_dfa my_dfa frontier seen
 	| tran::tl ->
 	  (match tran with
 	    | Nfa.Delete -> add_transitions my_dfa origin tl frontier seen
@@ -47,11 +47,12 @@ struct
 		else 
 		  add_transitions my_dfa origin tl frontier seen in
 
-    let rec build_dfa my_dfa (frontier: Type.state list)  (seen: Type.StateSet) =
+    and build_dfa my_dfa (frontier: Type.state list)  (seen: Type.StateSet) : dfa_t =
       match frontier with
 	| [] -> my_dfa
 	| current::tl ->
 	  let transitions : Nfa.tran list = nfa.get_transitions my_nfa current in
-	  add_transitions my_dfa current transitions frontier seen
+	  add_transitions my_dfa current transitions tl seen
+	  
     in build_dfa my_dfa frontier seen
 end
