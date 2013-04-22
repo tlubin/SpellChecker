@@ -15,7 +15,14 @@ struct
 
   let create filename =
     (* read in file from /usr/share/dict/web2 into an array *)
-    failwith "implement"
+    let fp = open_in filename in
+    let rec count (n: int) (temp: in_channel) : int =
+      try
+	ignore (input_line temp);
+	count (n+1) temp
+      with End_of_file -> n in
+    (* make array of size (count 0 fp) *)
+    (* move fp back to the start and then read in the words into the array and return the array *)
 
   let next_entry dict word =
     (* recursively find the next word, inclusive *)
