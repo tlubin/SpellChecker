@@ -10,8 +10,9 @@ struct
     let mydict : dict.dict_t = dict.create dict_file in
     let word_nfa : nfa.nfa_t = nfa.build(word) in
     let word_dfa = to_dfa(word_nfa) in
+    (* INCOMPLETE IMPLEMENTATION *)
     let rec find_matches_rec (current: string) (matches : string list) =
-      let next_match = word_dfa.next_valid_string current in
+      let next_match = dfa.next_valid_string word_dfa current in
       let next_dict = mydict.next_entry next_match in
       if next_dict = next_match then find_matches_rec next_match (next_match::matches)
       else failwith "implement me"
