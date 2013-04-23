@@ -59,7 +59,7 @@ struct
     Type.StateSet.mem state final_states
 
 
-  let tran_types = [Delete | Insert | Swap | '$']
+  let tran_types = [Delete | Insert | Swap | Correct '$']
 
   (* Build NFA Helpers *)
   let add_transition (transitions: Type.StateDict) (src: Type.state) 
