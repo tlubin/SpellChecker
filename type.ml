@@ -6,7 +6,7 @@
 type state = int*int
 
 (* types of transitions for nfa and dfa *)
-type nfa_tran = Correct of char | Delete | Insert | Swap
+type nfa_tran = Actual of char | Delete | Insert | Swap
 type dfa_tran = Correct of char | Other
 
 (* Set of states *)
