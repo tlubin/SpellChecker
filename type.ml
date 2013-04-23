@@ -24,9 +24,6 @@ struct
 end)
 
 
-(* transitions dictionary * start state * final states *)
-type automata = Type.StateDict * Type.state * Type.StateSet
-=======
 (* dictionary with nfa_tran as keys *)
 module NTranDict = Map.Make(
 struct
