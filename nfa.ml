@@ -42,10 +42,11 @@ struct
     NTranDict.find trans inner_dict
 
   (* return a list of transitions from a given state *)
-  let get_transitions my_nfa orig =
+  let get_transitions (my_nfa: n_automata) (orig: state) =
     let trans_dict, _, _ = my_nfa in 
-    assert(NTranDict.mem orig trans_dict);
-    NTranDict.fold (fun tran _ trans -> tran::trans) trans_dict []
+    assert ( StateDict.mem orig trans_dict );
+    let inner_dict = StateDict.find orig trans_dict in
+    NTranDict.fold (fun tran _ trans -> tran::trans) (inner_dict) []
 
   (* return whether a given state is a final state *)
   let is_final my_nfa state =
