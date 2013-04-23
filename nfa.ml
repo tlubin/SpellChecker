@@ -1,11 +1,3 @@
-type tran = Correct of char | Delete | Insert | Swap
-
-module TranDict = Map.Make(
-struct
-  type t = Nfa.tran
-  let compare a b = compare a b
-end)
-
 module type NFA =
 sig
   type nfa_t
