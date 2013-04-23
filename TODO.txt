@@ -1,4 +1,4 @@
 TODO's LIST:
 
--make sure dev branch in git is working
--all New Files should be added to the Makefile
+-SO FAR THIS IS COMPILABLE: ocamlc type.ml nfa.ml dfa.ml dict.ml
+-YAY
