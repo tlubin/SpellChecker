@@ -5,7 +5,7 @@ module type DFA =
 sig
   type dfa_t
   
-  (* return the next valid string satisfying the dfa *)
+  (* return the next valid string satisfying the dfa or None *)
   val next_valid_string: dfa_t -> string -> string option
 
   (* singleton returns a dfa, with given start state *)
@@ -22,6 +22,8 @@ sig
 
   (* run tests on functions *)
   val unit_tests: unit -> unit
+  val build_test: unit -> dfa_t
+
 end
 
 module Dfa : DFA =
@@ -29,102 +31,114 @@ struct
 
   type dfa_t = d_automata
 
-  (* Helper Functions for next_valid_string *)
+  (* get the start state *)
   let start_state my_dfa =
     let _, start, _ = my_dfa in start
-
+  
+  (* check whether a state is final *)
   let is_final my_dfa state =
     let _, _, final_states = my_dfa in StateSet.mem state final_states
 
-  (* get the next state from a current state. try to go by transition
-     tran but otherwise go by Other *)
+  (* get the next state from a current state and a transtion.
+     if a transition Correct l is passed, try to take Other
+     before returning None*)
   let next_state my_dfa state tran: state option =
     let trans_dict, _, _ = my_dfa in
-    assert(StateDict.mem state trans_dict);
-    let inner_dict = StateDict.find state trans_dict in
-    match (DTranDict.mem tran inner_dict), (DTranDict.mem Other inner_dict) with
-      | true, _ -> Some (DTranDict.find tran inner_dict)
-      | false, true -> Some (DTranDict.find Other inner_dict)
-      | false, false -> None
-
+    if not (StateDict.mem state trans_dict) then None
+    else 
+      let inner_dict = StateDict.find state trans_dict in
+      match (DTranDict.mem tran inner_dict), (DTranDict.mem Other inner_dict) with
+	| true, _ -> Some (DTranDict.find tran inner_dict)
+	| false, true -> Some (DTranDict.find Other inner_dict)
+	| false, false -> None
+  
+  (* return a list of transitions from a given state *)
   let get_transitions my_dfa orig =
     let trans_dict, _, _ = my_dfa in
-    assert(StateDict.mem orig trans_dict);
-    DTranDict.fold (fun tran _ trans -> tran::trans) (StateDict.find orig trans_dict) []
+    if not (StateDict.mem orig trans_dict) then []
+    else DTranDict.fold (fun tran _ trans -> tran::trans) 
+      (StateDict.find orig trans_dict) []
 
-  (* return the lexigraphical first transition from a given state if one exists
-     from an input letter or as close to it as possible *)
+  (* evaluate the dfa as far as possible given a string and return a stack and state*)
+  let evaluate_dfa my_dfa str =
+    (* recursively build up a stack of (str_so_far, state, next_letter) *)
+    let stack = ref [] in
+    let rec helper current_state depth =
+      if depth = (String.length str) then 
+	(* add last state *)
+	let _ = stack := (str, current_state, None)::!stack in
+	(!stack, current_state)
+      else 
+	let letter = String.get str depth in (* next letter to be consumed *)
+	let str_so_far = String.sub str 0 depth in (* what has been consumed so far *)
+	let _ = stack := (str_so_far, current_state, Some letter)::!stack in 
+	match next_state my_dfa current_state (Correct letter) with
+	  | None ->
+	    (* no transition so add a dummy state *)
+	    let state = (-1, -1) in
+	    let str_so_far' = String.sub str 0 (depth+1) in
+	    (* letter is None because it is just going to be backtracked anyway *)
+	    let _ = stack := (str_so_far', state, None)::!stack in (!stack, state)
+	  | Some s -> helper s (depth+1)
+    in helper (start_state my_dfa) 0
+
+  (* extract the state from an option that is known to be Some s *)
+  let extract_state (state: state option) : state =
+    match state with
+      | Some s -> s
+      | None -> failwith "bad call to extract_state"
+
+  (* take the first lexigraphical transition from a state and a letter
+     return the new state and the letter that was taken *)
   (* THIS IS ALGORITHMICALLY NOT GOOD!! *)
-  let first_transition my_dfa state letter: dfa_tran option =
+  let first_transition my_dfa state letter: (state*char) option =
     let trans_list = get_transitions my_dfa state in
-    match  List.mem Other trans_list with
+    match List.mem Other trans_list with
       | true -> 
 	if List.mem (Correct letter) trans_list 
-	then Some (Correct letter) else Some Other
+	then Some (extract_state (next_state my_dfa state (Correct letter)), letter)
+	else Some (extract_state (next_state my_dfa state Other), letter)
       | false -> 
 	let sorted = List.sort (fun t1 t2 -> match t1, t2 with
 	  | Correct a, Correct b -> compare a b
-	  | _ -> failwith "shouldn't happen") trans_list in
+	  | _ -> failwith "shouldn't happen 1") trans_list in
 	(* find the closest transition to the letter (inclusive) if it exists *)
 	try 
 	  let first_tran = List.find 
 	    (fun t -> 
 	      match t with
 		| Correct a -> compare letter a = 0 || compare letter a < 0
-		| _ -> failwith "shouldn't happen") sorted in Some first_tran
+		| _ -> failwith "shouldn't happen 2") sorted in
+	  let letter = (
+	    match first_tran with
+	      | Correct l -> l
+	      | Other -> failwith "shouldn't happen 3") in
+	  Some (extract_state (next_state my_dfa state first_tran), letter)
 	with Not_found -> None
-
+  
+  (* find the next string that satisfies the dfa from a given state and given
+     letter as an outedge. None if there is no such edge *)
   let find_next_edge my_dfa current_state (letter: char option) : string option =
-    let _ = print_string "checkpoint 1" in
-    (* return None right away if the letter is 'z' *)
-    if letter = Some 'z' then None 
+    (* return None right away if the letter is last of alphabet *)
+    if letter = Some (Dict.last_letter()) then None 
     else
       let next_letter =
 	(match letter with
-	  | None -> 'a'
-	  | Some l -> Char.chr ((Char.code l) + 1)) in
+	  | None -> Dict.first_letter()
+	  | Some l -> Dict.next_letter l) in
      let rec helper state (letter: char) (path: string) : string option =
        (* letter is the first character to try *)
        match first_transition my_dfa state letter with
 	 | None -> None
-	 | Some t -> 
-	   let t_letter = (match t with
-	     | Correct k -> k
-	     | Other -> failwith "shouldn't happen") in
-	   let new_path = path ^ (Char.escaped t_letter) in
-	   let new_state = (match next_state my_dfa state t with 
-	     | Some t -> t
-	     | None -> failwith "shouldn't happen") in
-	   if is_final my_dfa new_state then Some new_path 
-	   else helper new_state 'a' new_path (* DONT HARD CODE IN THE a *)
+	 | Some (s,l) -> 
+	   let new_path = path ^ (Char.escaped l) in
+	   if is_final my_dfa s then Some new_path
+	   else helper s (Dict.first_letter()) new_path
      in helper current_state next_letter ""
 
   (* get the next valid lexigraphical string in the DFA *)
-  (* INCOMPLETE IMPLEMENTATION *)
   let next_valid_string my_dfa str : string option =
-    (* evaluate the dfa as far as possible *)
-    let rec evaluate_dfa current_state depth stack =
-      let letter : char option = (
-	if depth = (String.length str) then None
-	else Some (String.get str depth)) in (* next letter to be consumed *)
-      let str_so_far = String.sub str 0 depth in (* what has been consumed so far *)
-      let stack = (str_so_far, current_state, letter)::stack in (* add the current info the the stack *)
-      if depth = (String.length str) then (stack, current_state)
-      else
-	(* PATCH FIX *)
-	let c = (match letter with
-	  | None -> failwith "shouldn't happen"
-	  | Some k -> k) in
-	match next_state my_dfa current_state (Correct c) with
-	  | None ->
-	    (* add a dummy state of (-1,-1) to the stack *)
-	    let state = (-1, -1) in
-	    let str_so_far' = String.sub str 0 (depth+1) in
-	    (* letter is None because it is just going to be backtracked anyway *)
-	    let stack = (str_so_far', state, None)::stack in
-	    (stack, state)
-	  | Some s -> evaluate_dfa s (depth+1) stack in
-    let stack, state = evaluate_dfa (start_state my_dfa) 0 [] in
+    let stack, state = evaluate_dfa my_dfa str in
     if is_final my_dfa state then Some str (* word is valid *) 
     else
       let rec wall_search stack : string option =
@@ -186,18 +200,53 @@ struct
     print_newline ();
     print_string "--------------------------------\n";
     print_string (string_of_trans_dict trans_dict)
-    
 
-  let unit_tests () =
+  (* debugging. build the dfa for food with one edit *)
+  let build_test () =
     let dfa = ref (singleton (0,0)) in
-    dfa := (add_transition !dfa (0,0) (Correct 'b') (1,1));
+    dfa := (add_transition !dfa (0,0) (Correct 'f') (1,1));
+    dfa := (add_transition !dfa (0,0) (Correct 'o') (2,2));
+    dfa := (add_transition !dfa (0,0) Other (3,3));
+    dfa := (add_transition !dfa (1,1) (Correct 'o') (4,4));
+    dfa := (add_transition !dfa (1,1) Other (5,5));
+    dfa := (add_transition !dfa (2,2) (Correct 'f') (6,6));
+    dfa := (add_transition !dfa (2,2) (Correct 'o') (9,9));
+    dfa := (add_transition !dfa (3,3) (Correct 'f') (6,6));
+    dfa := (add_transition !dfa (3,3) (Correct 'o') (10,10));
+    dfa := (add_transition !dfa (4,4) (Correct 'o') (7,7));
+    dfa := (add_transition !dfa (4,4) (Correct 'd') (8,8));
+    dfa := (add_transition !dfa (4,4) Other (9,9));
+    dfa := (add_transition !dfa (5,5) (Correct 'o') (9,9));
+    dfa := (add_transition !dfa (6,6) (Correct 'o') (10,10));
+    dfa := (add_transition !dfa (7,7) (Correct 'd') (11,11));
+    dfa := (add_transition !dfa (7,7) Other (12,12));
+    dfa := (add_transition !dfa (8,8) (Correct 'o') (13,13));
+    dfa := (add_transition !dfa (8,8) (Correct 'd') (14,14));
+    dfa := (add_transition !dfa (9,9) (Correct 'o') (13,13));
+    dfa := (add_transition !dfa (9,9) (Correct 'd') (14,14));
+    dfa := (add_transition !dfa (10,10) (Correct 'o') (13,13));
+    dfa := (add_transition !dfa (11,11) Other (14,14));
+    dfa := (add_transition !dfa (12,12) (Correct 'd') (14,14));
+    dfa := (add_transition !dfa (13,13) (Correct 'd') (14,14));
+    dfa := (add_final !dfa (7,7));
+    dfa := (add_final !dfa (8,8));
+    dfa := (add_final !dfa (11,11));
+    dfa := (add_final !dfa (12,12));
+    dfa := (add_final !dfa (14,14));
+    !dfa
+  
+  (* write tests here *)
+  let unit_tests () =
+    let dfa = ref (singleton (0, 0)) in
+    dfa := (add_transition !dfa (0,0) (Correct 'f') (1,1));
     dfa := (add_final !dfa (1,1));
     dfa := (add_transition !dfa (0,0) Other (2,2));
     dfa := (add_transition !dfa (2,2) (Correct 'f') (3,3));
+    dfa := (add_final !dfa (3,3));
     let _ = print_dfa !dfa in
-    let next_valid = (match next_valid_string !dfa "a" with
-      | Some s -> s
-      | None -> "none") in
-    print_string next_valid
+    let next_valid str = (match next_valid_string !dfa str with
+      | Some s -> s ^ "\n"
+      | None -> "none\n") in
+    print_string (next_valid "bz")
     
 end

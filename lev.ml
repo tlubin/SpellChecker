@@ -1,23 +1,30 @@
+(* uncomment the lines of code when NFA is compiling and works *)
+
 module type LEV =
 sig
   val find_matches : string -> int -> string -> string list
 end
 
-module Levenshtein (nfa: NFA) (dfa: DFA) (dict: DICT) : LEV =
+module Levenshtein (*(Nfa: Nfa.NFA)*) (Dfa: DFA) (Dict: DICT) : LEV =
 struct
-
-  let find_matches (word: string) (distance: int) (dict_file: string) =
-    let mydict : dict.dict_t = dict.create dict_file in
-    let word_nfa : nfa.nfa_t = nfa.build(word) in
-    let word_dfa = to_dfa(word_nfa) in
-    (* INCOMPLETE IMPLEMENTATION *)
+  let find_matches word distance dict_file =
+(*    let word_nfa = nfa.build(word) in
+    let word_dfa = to_dfa(word_nfa) in *)
+    let word_dfa = Dfa.build_test () in (* delete this line when nfa is compiling and working *)
+    let mydict = Dict.create dict_file in
     let rec find_matches_rec (current: string) (matches : string list) =
-      let next_match = dfa.next_valid_string word_dfa current in
-      let next_dict = mydict.next_entry next_match in
-      if next_dict = next_match then find_matches_rec next_match (next_match::matches)
-      else failwith "implement me"
-    in find_matches_rec '' []
-	
+      match Dfa.next_valid_string word_dfa current with
+	| Some str ->
+	  let next_dict = Dict.next_entry mydict str in
+	  if next_dict = "" then matches
+	  else 
+	    if next_dict = str 
+	    then find_matches_rec (str ^ (Char.escaped(Dict.first_letter()))) (str::matches)
+	    else find_matches_rec next_dict matches
+	| None -> matches
+    in find_matches_rec "" []
+
+(*    
   let to_dfa (my_nfa: nfa.nfa_t) : dfa.dfa_t =
     let my_dfa = dfa.singleton (nfa.start_state my_nfa) in
     let frontier = [nfa.start_state my_nfa] in
@@ -56,4 +63,7 @@ struct
 	  add_transitions my_dfa current transitions tl seen
 	  
     in build_dfa my_dfa frontier seen
+*)
 end
+
+module My_lev = Levenshtein (Dfa.Dfa) (Dict.Dict);;
