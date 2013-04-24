@@ -34,7 +34,7 @@ struct
     let _, start, _ = my_nfa in start
 
   (* get the next state given an origin and transition type *)
-  let next_state my_nfa orig trans =
+  let next_state (my_nfa: n_automata) (orig: state) (trans: nfa_state) =
     let trans_dict, start, final_states = my_nfa in
     assert(StateDict.mem orig trans_dict);
     let inner_dict = StateDict.find orig trans_dict in
@@ -49,7 +49,7 @@ struct
     NTranDict.fold (fun tran _ trans -> tran::trans) (inner_dict) []
 
   (* return whether a given state is a final state *)
-  let is_final my_nfa state =
+  let is_final (my_nfa: n_automata) (state: state) =
     let _, _, final_states = my_nfa in
     StateSet.mem state final_states
 
@@ -107,4 +107,3 @@ struct
       (build_from_string str);
       (!transitions, starting_state, !final_states)
 end
-  
