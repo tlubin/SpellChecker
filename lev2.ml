@@ -5,9 +5,42 @@ end
 
 module Levenshtein (Nfa: AUTOMATA) (Dfa: AUTOMATA) (Dict: DICT) : LEV =
 struct
-  let build_nfa str k : Nfa.nfa_t =
+  let build_nfa str edit_d : Nfa.nfa_t =
     (* build an Nfa from a string and edit distance *)
-    failwith "sjdlflksa"
+    let my_nfa = ref (Nfa.singleton()) in
+    let len = String.length str in
+    let add_edges () =
+      let i = ref 0 in
+      let e = ref 0 in
+      while !i < len do
+	while !e <= edit_d do
+          List.iter (fun t -> 
+	    let current = (State.state_of_indices !i !e) in
+	    match State.transition current t str edit_d with
+	      | None -> ()
+	      | Some (st,tr) -> transitions := add_transition !transitions current tr st)
+	    (State.list_of_trans());
+	  e := !e + 1
+	done;
+	i := !i + 1;
+	e := 0
+      done in
+    let add_final_states () =
+      let e = ref 0 in
+      while !e <= edit_d do
+	final_states := (StateSet.add (State.state_of_indices len !e) (!final_states));
+	if !e < edit_d then
+	  let current = (State.state_of_indices len !e) in
+	  let st, tr = State.transition_final current in
+	  transitions := (add_transition !transitions current tr st);
+	  e := !e + 1
+	else 
+	  e := !e + 1
+      done in
+    add_edges();
+    add_final_states();
+
+
 
   let next_valid_string (my_dfa : Dfa.dfa_t) str : string =
     failwith "askldjflska"

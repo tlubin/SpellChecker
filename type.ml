@@ -2,6 +2,18 @@
  * type definitions for automata
  *)
 
+(* types of transitions for nfa and dfa *)
+type my_state = int*int
+type nfa_tran = NCorrect of char | Anyi | Anys | Epsilon
+type dfa_tran = DCorrect of char | Other
+
+module StateSet = Set.Make(
+  struct 
+    type t = my_state
+    let compare a b = compare a b
+  end)
+
+
 module type STATE =
 sig
 
@@ -25,10 +37,10 @@ sig
   val string_of_tran : tran -> string
 end
 
-module MyNfaState : STATE =
+module MyNfaState : STATE with type t = int*int with type tran = nfa_tran =
 struct
   type t = int*int
-  type tran =  Correct of char | Anyi | Anys | Epsilon
+  type tran = nfa_tran
 
   let start_state () = (0,0)
 
@@ -60,25 +72,16 @@ struct
       | Anys -> "Swap")
 end
 
-module MyDfaState : STATE =
+module MyDfaState : STATE with type t = StateSet.t with type tran = dfa_tran =
 struct
-  module StateSet = Set.Make(
-    struct 
-      type t = int*int
-      let compare a b = compare a b
-    end)
-
   type t = StateSet.t
-  type tran = Correct of char | Other
+  type tran = dfa_tran
   
 end
 
 (* letters consumed * number of edits *)
 type state = int*int
 
-(* types of transitions for nfa and dfa *)
-type nfa_tran = Actual of char | Delete | Insert | Swap
-type dfa_tran = Correct of char | Other
 
 (* Set of states *)
 module StateSet = Set.Make(
