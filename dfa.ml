@@ -4,6 +4,7 @@ open Type
 module type DFA =
 sig
   type dfa_t
+  type state
   
   (* return the next valid string satisfying the dfa or None *)
   val next_valid_string: dfa_t -> string -> string option
@@ -26,9 +27,12 @@ sig
 
 end
 
-module Dfa : DFA =
+(* State taken in as input is a module that defines a state type.
+   Dfa has "state" as a set of State.t *)
+module Dfa (State: STATE) : DFA =
 struct
 
+  type state = (* set of State.t *)
   type dfa_t = d_automata
 
   (* get the start state *)
@@ -159,7 +163,7 @@ struct
     let trans_dict, start, final_states = my_dfa in
     if StateDict.mem orig trans_dict then 
       (let inner_dict = StateDict.find orig trans_dict in
-       assert(not (DTranDict.mem trans inner_dict));
+(*       assert(not (DTranDict.mem trans inner_dict)); *)
        let inner_dict' = DTranDict.add trans dest inner_dict in
        let trans_dict' = StateDict.add orig inner_dict' trans_dict in
       (trans_dict', start, final_states))

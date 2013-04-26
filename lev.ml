@@ -3,6 +3,7 @@ open Type
 module type LEV =
 sig
   val find_matches : string -> int -> string -> string list
+  val test : unit -> unit
 end
 
 module Levenshtein (Nfa: NFA) (Dfa: DFA) (Dict: DICT) : LEV =
@@ -20,6 +21,8 @@ struct
     let seen = StateSet.empty in
     let rec add_transitions my_dfa (origin: state) (trans : nfa_tran list)
 	(frontier: state list) (seen: StateSet.t) : Dfa.dfa_t  =
+      Nfa.print_state origin;
+      Nfa.print_trans trans;
       match trans with
 	| [] -> build_dfa my_dfa frontier seen
 	| tran::tl ->
@@ -35,6 +38,7 @@ struct
 		  let my_dfa = add_tran my_dfa tran origin new_state in
 		  add_transitions my_dfa origin tl frontier seen
 		else 
+		  let my_dfa = add_tran my_dfa tran origin new_state in
 		  add_transitions my_dfa origin tl frontier seen
               else
 		let my_dfa = add_tran my_dfa tran origin new_state in
@@ -63,5 +67,10 @@ struct
 	    else find_matches_rec next_dict matches
 	| None -> matches
     in find_matches_rec "" []
+
+  let test () =
+    let n = Nfa.build "food" 2 in
+    let d = to_dfa n in
+    Dfa.print_dfa d
 
 end
