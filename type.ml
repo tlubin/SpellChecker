@@ -15,7 +15,7 @@ sig
   val state_of_indices : int -> int -> t
 
   val transition : t -> tran -> string -> int -> (t*tran) option
-  val transition_final : t -> t*tran
+  val transition_final : t -> (t*tran)
 
   (* starting state *)
   val start_state : unit -> t
@@ -70,6 +70,23 @@ struct
 
   type t = StateSet.t
   type tran = Correct of char | Other
+
+  (* return a list of possible transitions *)
+  let list_of_trans () =
+    failwith "implement me"
+
+  let state_of_indices a b = 
+    failwith "implement me"
+
+  let transition a b c d = failwith "implement me"
+  let transition_final t = failwith "implement me"
+
+  (* starting state *)
+  let start_state () = failwith "implement me"
+
+  (* string representations *)
+  let string_of_state t = failwith "implement me"
+  let string_of_tran t = failwith "implement me"
   
 end
 
