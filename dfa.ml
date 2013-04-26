@@ -5,21 +5,24 @@ module type DFA =
 sig
   type dfa_t
   type state
+  type tran
   
   (* return the next valid string satisfying the dfa or None *)
-  val next_valid_string: dfa_t -> string -> string option
+(*  val next_valid_string: dfa_t -> string -> string option *)
 
   (* singleton returns a dfa, with given start state *)
   val singleton: state -> dfa_t
 
   (* add a transition (cur state, transition, new state) to the dfa *)
-  val add_transition: dfa_t -> state -> dfa_tran -> state -> dfa_t
+  val add_transition: dfa_t -> state -> tran -> state -> dfa_t
 
   (* add to final states *)
   val add_final: dfa_t -> state -> dfa_t 
 
   (* debug function to print a dfa *)
   val print_dfa: dfa_t -> unit
+
+  (* is final/ next_state *)
 
   (* run tests on functions *)
   val unit_tests: unit -> unit
@@ -31,9 +34,31 @@ end
    Dfa has "state" as a set of State.t *)
 module Dfa (State: STATE) : DFA =
 struct
+  type state = State.t
+  type tran = Other | 
 
-  type state = (* set of State.t *)
-  type dfa_t = d_automata
+  (* other helpful modules and types *)
+  module StateSet = Set.Make(
+    struct
+      type t = state
+      let compare a b = compare a b
+    end)
+
+  module StateDict = Map.Make(
+    struct
+      type t = state
+      let compare a b = compare a b
+    end)
+
+  module TranDict = Map.Make(
+    struct
+      type t = tran
+      let compare a b = compare a b
+    end)
+
+  type d_inner = state TranDict.t
+
+  type dfa_t = (d_inner StateDict.t * state * StateSet.t)
 
   (* get the start state *)
   let start_state my_dfa =
@@ -51,16 +76,16 @@ struct
     if not (StateDict.mem state trans_dict) then None
     else 
       let inner_dict = StateDict.find state trans_dict in
-      match (DTranDict.mem tran inner_dict), (DTranDict.mem Other inner_dict) with
-	| true, _ -> Some (DTranDict.find tran inner_dict)
-	| false, true -> Some (DTranDict.find Other inner_dict)
+      match (TranDict.mem tran inner_dict), (TranDict.mem Other inner_dict) with
+	| true, _ -> Some (TranDict.find tran inner_dict)
+	| false, true -> Some (TranDict.find Other inner_dict)
 	| false, false -> None
   
   (* return a list of transitions from a given state *)
   let get_transitions my_dfa orig =
     let trans_dict, _, _ = my_dfa in
     if not (StateDict.mem orig trans_dict) then []
-    else DTranDict.fold (fun tran _ trans -> tran::trans) 
+    else TranDict.fold (fun tran _ trans -> tran::trans) 
       (StateDict.find orig trans_dict) []
 
   (* evaluate the dfa as far as possible given a string and return a stack and state*)

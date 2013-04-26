@@ -60,6 +60,19 @@ struct
       | Anys -> "Swap")
 end
 
+module MyDfaState : STATE =
+struct
+  module StateSet = Set.Make(
+    struct 
+      type t = int*int
+      let compare a b = compare a b
+    end)
+
+  type t = StateSet.t
+  type tran = Correct of char | Other
+  
+end
+
 (* letters consumed * number of edits *)
 type state = int*int
 

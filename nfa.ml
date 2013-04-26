@@ -5,9 +5,15 @@ sig
   type nfa_t
   type state
   type tran
+    
+  (* ALL functions to build a general NFA and get information about it *)
 
   (** build an nfa_t for a given input word and edit distance *)
-  val build: string -> int -> nfa_t
+(*  val build: string -> int -> nfa_t *)
+
+  val singleton : state -> nfa_t
+
+  val add_transition : nfa_t -> state -> tran -> state -> nfa_t
 
   (* takes nfa and returns start state *)
   val start_state: nfa_t -> state
