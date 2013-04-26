@@ -22,8 +22,6 @@ sig
   val is_final: nfa_t -> state -> bool 
 
   (* debug function to print a dfa *)
-  val print_state : state -> unit
-  val print_trans : tran list -> unit
   val print_nfa: nfa_t -> unit
   val unit_tests: unit -> unit
 
@@ -92,20 +90,20 @@ struct
 
   (* Build NFA Helpers *)
   let add_transition (transitions: n_inner StateDict.t) (src: state) 
-    (tran: nfa_tran) (dest: state) =
+    (tran: tran) (dest: state) =
     (* check if our starting state already exists in state dictionary *)
     (* do asserts here later for overwriting *)
     if StateDict.mem src transitions then
       let inner_dict = StateDict.find src transitions in
-      let inner_dict = NTranDict.add tran dest inner_dict in
+      let inner_dict = TranDict.add tran dest inner_dict in
       StateDict.add src inner_dict transitions
     else
-      let t_dict = NTranDict.singleton tran dest in
+      let t_dict = TranDict.singleton tran dest in
       StateDict.add src t_dict transitions
 
   (* Build NFA Main Function *)
 let build str edit_d =
-  let starting_state = State.start_state in
+  let starting_state = State.start_state() in
   let final_states = ref StateSet.empty in
   let transitions = ref (StateDict.singleton starting_state TranDict.empty) in
   let len = String.length str in
@@ -120,7 +118,7 @@ let build str edit_d =
 	  match State.transition current t str edit_d with
 	    | None -> ()
 	    | Some (st,tr) -> transitions := add_transition !transitions current tr st)
-	State.list_of_trans()
+	  (State.list_of_trans());
         e := !e + 1
       done;
       i := !i + 1;
@@ -133,8 +131,10 @@ let build str edit_d =
       if !e < edit_d then
 	let current = (State.state_of_indices len !e) in
 	let st, tr = State.transition_final current in
-	transitions := (add_transition !transitions current tr st)
-      e := !e + 1
+	transitions := (add_transition !transitions current tr st);
+	e := !e + 1
+      else 
+	e := !e + 1
     done in
   add_edges();
   add_final_states();
@@ -145,36 +145,22 @@ let build str edit_d =
     
 
   (* debugging function to print a dfa *)
-  let string_of_state (s1, s2) = Printf.sprintf "(%d, %d)\n" s1 s2
-
-  let string_of_tran t =
-    (match t with
-      | Actual c -> String.make 1 c
-      | Delete -> "Delete"
-      | Insert -> "Insert"
-      | Swap -> "Swap") ^ "\n"
-
-  let print_state s = print_string (string_of_state s)
-    
-  let print_trans ts = 
-    print_string (List.fold_left (fun str t -> str ^ (string_of_tran t) ^ ", ")
-      "" ts)
 
   let print_nfa my_nfa =
     let string_of_state_set s_set =
-      let str = StateSet.fold (fun s str -> str ^ (string_of_state s) ^ ", ") s_set "" in
+      let str = StateSet.fold (fun s str -> str ^ (State.string_of_state s) ^ ", ") s_set "" in
       (* remove last comma *)
       String.sub str 0 (String.rindex_from str (String.length str - 1) ',') in
     let string_of_trans_dict d =
       let string_of_inner i =
-	NTranDict.fold (fun k v str ->
-	  str ^ "   " ^ (string_of_tran k) ^ " --> " ^ (string_of_state v) ^ "\n"
+	TranDict.fold (fun k v str ->
+	  str ^ "   " ^ (State.string_of_tran k) ^ " --> " ^ (State.string_of_state v) ^ "\n"
 	) i "" in
       StateDict.fold (fun k v str ->
-	str ^ (string_of_state k) ^ " -->\n" ^ (string_of_inner v) ^ "\n"
+	str ^ (State.string_of_state k) ^ " -->\n" ^ (string_of_inner v) ^ "\n"
       ) d "" in
     let trans_dict, start, final_states = my_nfa in
-    print_string ("Start State: " ^ (string_of_state start));
+    print_string ("Start State: " ^ (State.string_of_state start));
     print_newline ();
     print_string ("Final States: " ^ (string_of_state_set final_states));
     print_newline ();

@@ -12,9 +12,9 @@ sig
   (* return a list of possible transitions *)
   val list_of_trans : unit -> tran list
 
-  val state_of_indices : int -> int - > t
+  val state_of_indices : int -> int -> t
 
-  val transition : t -> tran -> int -> (t*tran) option
+  val transition : t -> tran -> string -> int -> (t*tran) option
   val transition_final : t -> t*tran
 
   (* starting state *)
@@ -30,6 +30,8 @@ struct
   type t = int*int
   type tran =  Correct of char | Anyi | Anys | Epsilon
 
+  let start_state () = (0,0)
+
   let list_of_trans () =
     [Correct '$'; Anyi; Anys; Epsilon]
 
@@ -39,26 +41,24 @@ struct
   let transition s t str edit_d =
     let i,e = s in
     match t with
-      | Correct _ -> (i+1, e), (Correct (String.get str i))
+      | Correct _ -> Some ((i+1, e), (Correct (String.get str i)))
       | Anys -> if e < edit_d then
-	  (i+1, e+1), t else None
+	  Some ((i+1, e+1), t) else None
       | Anyi -> if e < edit_d then
-	  (i, e+1), t else None
+	  Some ((i, e+1), t) else None
       | Epsilon -> if e < edit_d then
-	  (i+1, e+1), t else None
+	  Some ((i+1, e+1), t) else None
 
   let string_of_state (s1, s2) = 
     Printf.sprintf "(%d, %d)\n" s1 s2
 
   let string_of_tran t =
     (match t with
-      | Actual c -> String.make 1 c
-      | Delete -> "Delete"
-      | Insert -> "Insert"
-      | Swap -> "Swap")
+      | Correct c -> String.make 1 c
+      | Epsilon -> "Delete"
+      | Anyi -> "Insert"
+      | Anys -> "Swap")
 end
-
-module MyDfaState
 
 (* letters consumed * number of edits *)
 type state = int*int
