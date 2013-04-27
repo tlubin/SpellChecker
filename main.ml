@@ -1,5 +1,6 @@
-(* this is going to be the main file for the command line thing *)
+open lev
 
-module MyLev = Lev.Levenshtein (Nfa.Nfa) (Dfa.Dfa) (Dict.Dict)
+module MyLev = Levenshtein (Nfa.Nfa) (Dfa.Dfa) (Dict.Dict);;
 
-MyLev.find_matches "nice" 1 "usr/bin/lkjasdflkas"
+let dict = Sys.argv.(1);
+MyLev.find_matches "nice" dict

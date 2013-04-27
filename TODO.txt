@@ -2,3 +2,5 @@ TODO's LIST:
 
 -SO FAR THIS IS COMPILABLE: ocamlc type.ml nfa.ml dfa.ml dict.ml
 -YAY
+
+i created a shell file that passes in the number of words in the dictionary as an argument to the ocaml program. from now on run main.sh to run the program.

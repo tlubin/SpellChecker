@@ -27,22 +27,12 @@ struct
   let next_letter l =  Char.chr ((Char.code l) + 1)
 
   let create filename =
-    (* read in file from /usr/share/dict/web2 into an array *)
+    (* read in file from /usr/share/dict/web2 into an array *) 
     let fp = open_in filename in
-    let count = ref 0 in
-    let calc_count =
-      try
-	while true do
-	  (ignore (input_line fp);
-	   incr count)
-	done
-      with End_of_file -> () in
-    calc_count;
+    let get_word i = String.lowercase (input_line fp) in
+    let len = int_of_string Sys.argv.(2) in (* length of the dictionary is passed in by the shell file *)
+    let a = Array.init len get_word in
     close_in fp;
-    let fp2 = open_in filename in
-    let get_word i = String.lowercase (input_line fp2) in
-    let a = Array.init !count get_word in
-    close_in fp2;
     a
     
     (* make array of size (count 0 fp) *)
