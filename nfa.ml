@@ -101,20 +101,20 @@ struct
     (tran: tran) (dest: state) =
     (* check if our starting state already exists in state dictionary *)
     (* do asserts here later for overwriting *)
-    let transitions, _, _ = transitions in
+    let transitions, start_state, final_states = transitions in
     if StateDict.mem src transitions then
       let inner_dict = StateDict.find src transitions in
       let inner_dict = TranDict.add tran dest inner_dict in
-      StateDict.add src inner_dict transitions
+      ((StateDict.add src inner_dict transitions), start_state, final_states)
     else
       let t_dict = TranDict.singleton tran dest in
-      StateDict.add src t_dict transitions
+      ((StateDict.add src t_dict transitions), start_state, final_states)
 
   (* Build NFA Main Function *)
 let build str edit_d =
   let starting_state = State.start_state() in
   let final_states = ref StateSet.empty in
-  let transitions = ref (StateDict.singleton starting_state TranDict.empty) in
+  let transitions = ref ((StateDict.singleton starting_state TranDict.empty), starting_state, !final_states) in
   let len = String.length str in
   let add_edges () =
     let i = ref 0 in
@@ -126,7 +126,9 @@ let build str edit_d =
       	  let current = (State.state_of_indices !i !e) in
       	  match State.transition current t str edit_d with
       	    | None -> ()
-      	    | Some (st,tr) -> transitions := add_transition !transitions current tr st)
+      	    | Some (st,tr) -> 
+                transitions := add_transition !transitions current tr st
+          )
     	  (State.list_of_trans());
         e := !e + 1
       done;
@@ -141,9 +143,7 @@ let build str edit_d =
       	let current = (State.state_of_indices len !e) in
       	let st, tr = State.transition_final current in
       	transitions := (add_transition !transitions current tr st);
-	      e := !e + 1
-      else 
-	      e := !e + 1
+      e := !e + 1;
     done in
   add_edges();
   add_final_states();
