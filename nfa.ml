@@ -1,186 +1,159 @@
-open Type
 open Automata
+open Type
 
-(*
 module type NFA =
 sig
-  type nfa_t
-  type state
-  type tran
-    
-  (* ALL functions to build a general NFA and get information about it *)
+  type t
 
-  (** build an nfa_t for a given input word and edit distance *)
-(*  val build: string -> int -> nfa_t *)
+  (* takes in a set of sets and returns a set of states
+     reachable within epsilon of the current state *)
+  val expand : t -> NfaStateSet.t -> NfaStateSet.t
 
-  val singleton : state -> nfa_t
+  val start_state : t -> nfa_state
 
-  val add_transition : nfa_t -> state -> tran -> state -> nfa_t
+  (* return a list of transitions coming out of any of the
+     states in an input set of states *)
+  val get_transitions : t -> NfaStateSet.t -> nfa_tran list
 
-  (* takes nfa and returns start state *)
-  val start_state: nfa_t -> state
+  (* takes in a set of states and returns a new set of states
+     reachable by a given transition. i.e. if a Correct is
+     given then an Any can be taken as well. Expand the result *)
+  val next_state : t -> NfaStateSet.t -> nfa_tran -> NfaStateSet.t
 
-  (* gets next state of nfa *)
-  val next_state: nfa_t -> state -> tran -> state
+  (* return whether or not a set of states contains a final state *)
+  val has_final : t -> NfaStateSet.t -> bool
 
-  (* get all transitions (list) leaving one state *)
-  val get_transitions: nfa_t -> state -> tran list
+  val build : string -> int -> t
+  val print_nfa : t -> unit
 
-  (* bool, check if a state is a final state *)
-  val is_final: nfa_t -> state -> bool 
-
-  (* debug function to print a dfa *)
-  val print_nfa: nfa_t -> unit
-  val unit_tests: unit -> unit
-
+  val unit_tests : unit -> unit
 end
-*)
 
-module Nfa (State: STATE) : AUTOMATA =
+module Nfa : NFA =
 struct
-  type state = State.t
-  type tran = State.tran
 
-  (* other helpful modules and types *)
-  module StateSet = Set.Make(
-    struct
-      type t = state
-      let compare a b = compare a b
-    end)
+  module A = Automata (MyNfaState)
 
-  module StateDict = Map.Make(
-    struct
-      type t = state
-      let compare a b = compare a b
-    end)
+  type t = A.t
 
-  module TranDict = Map.Make(
-    struct
-      type t = tran
-      let compare a b = compare a b
-    end)
+  let start_state = A.start_state
 
-  type n_inner = state TranDict.t
+  let get_transitions my_nfa states = 
+    let rec helper states total_trans = 
+      if NfaStateSet.cardinal states = 0 then total_trans
+      else
+	let state = NfaStateSet.choose states in
+	let states' = NfaStateSet.remove state states in
+	let trans = A.get_transitions my_nfa state in
+	(* add all elements from trans into total_trans and avoid duplicates *)
+	(* ALGORITHMICALLY BAD!! *)
+	let new_total =	List.fold_left (fun total curr -> 
+	  if not (List.mem curr total) then curr::total
+	  else total) total_trans trans in
+	helper states' new_total
+    in helper states []
+	    
+	  
 
-  (* transitions dictionary * starting state * final states *)
-  type t = (n_inner StateDict.t * state * StateSet.t)
+  let has_final my_nfa states = NfaStateSet.exists (A.is_final my_nfa) states
 
+  (* extract the state from an option that is known to be Some s *)
+  let extract_state (state: nfa_state option) : nfa_state =
+    match state with
+      | Some s -> s
+      | None -> failwith "bad call to extract_state"
 
-  (* return the start state of an nfa *)
-  let start_state my_nfa = 
-    let _, start, _ = my_nfa in start
+  let expand my_nfa states =
+    let rec expand_rec frontier new_states =
+      if NfaStateSet.cardinal frontier = 0 then new_states
+      else 
+	let state = NfaStateSet.choose frontier in
+	let frontier = NfaStateSet.remove state frontier in
+	match A.next_state my_nfa state Epsilon with
+	  | None -> expand_rec frontier new_states
+	  | Some s ->
+	    if not (NfaStateSet.mem s new_states) then 
+	      let frontier = NfaStateSet.add s frontier in
+	      expand_rec frontier (NfaStateSet.add s new_states)
+	    else
+	      expand_rec frontier new_states
+    in expand_rec states states
 
-  (* get the next state given an origin and transition type *)
-  let next_state (my_nfa: t) (orig: state) (trans: tran) =
-    let trans_dict, start, final_states = my_nfa in
-    assert(StateDict.mem orig trans_dict);
-    let inner_dict = StateDict.find orig trans_dict in
-    assert(TranDict.mem trans inner_dict);
-    TranDict.find trans inner_dict
+  (* take in a transition and a starting state and return a set of states
+     reachable by Any or the passed in transition *)
+  let get_dests my_nfa orig t =
+    List.fold_left (fun dests tr ->
+      match tr with
+	| NCorrect c ->
+	  if NCorrect c = t then
+	    let dest = extract_state (A.next_state my_nfa orig tr) in
+	    NfaStateSet.add dest dests
+	  else dests
+	| Anyi | Anys ->
+	  let dest = extract_state (A.next_state my_nfa orig tr) in
+	  NfaStateSet.add dest dests
+	| Epsilon -> dests) (NfaStateSet.empty) (A.get_transitions my_nfa orig)
 
-  (* return a list of transitions from a given state *)
-  let get_transitions (my_nfa: t) (orig: state) =
-    let trans_dict, _, _ = my_nfa in 
-    if not (StateDict.mem orig trans_dict) then []
-    else TranDict.fold (fun tran _ trans -> tran::trans) 
-      (StateDict.find orig trans_dict) []
+  (* takes in a set of states and returns a new set of states
+     reachable by a given transition. i.e. if a Correct is
+     given then an Any can be taken as well. Expand the result *)
+  let next_state my_nfa origs t =
+    let rec helper origs dests =
+      if NfaStateSet.cardinal origs = 0 then dests
+      else 
+	(* take a state from origs set *)
+	let state = NfaStateSet.choose origs in
+	let origs = NfaStateSet.remove state origs in
+	(* get destination states *)
+	let new_dests = get_dests my_nfa state t in
+	(* add destination states to dests set *)
+	helper origs (NfaStateSet.union dests new_dests)
+    in expand my_nfa (helper origs (NfaStateSet.empty))
 
-  (* return whether a given state is a final state *)
-  let is_final (my_nfa: t) (state: state) =
-    let _, _, final_states = my_nfa in
-    StateSet.mem state final_states
-
-
-  (* array of transition types to use later 
-   * '$' - arbitrary char
-   *)
-  let tran_types = State.list_of_trans()
-
-  (* Build NFA Helpers *)
-  let add_transition (transitions: t) (src: state) 
-    (tran: tran) (dest: state) =
-    (* check if our starting state already exists in state dictionary *)
-    (* do asserts here later for overwriting *)
-    let transitions, start_state, final_states = transitions in
-    if StateDict.mem src transitions then
-      let inner_dict = StateDict.find src transitions in
-      let inner_dict = TranDict.add tran dest inner_dict in
-      ((StateDict.add src inner_dict transitions), start_state, final_states)
-    else
-      let t_dict = TranDict.singleton tran dest in
-      ((StateDict.add src t_dict transitions), start_state, final_states)
-
-  (* Build NFA Main Function *)
-let build str edit_d =
-  let starting_state = State.start_state() in
-  let final_states = ref StateSet.empty in
-  let transitions = ref ((StateDict.singleton starting_state TranDict.empty), starting_state, !final_states) in
-  let len = String.length str in
-  let add_edges () =
-    let i = ref 0 in
-    let e = ref 0 in
-    while !i < len do
+  let build str edit_d = 
+    let my_nfa = ref (A.singleton_default()) in
+    let len = String.length str in
+    let add_edges () =
+      let i = ref 0 in
+      let e = ref 0 in
+      while !i < len do
+	while !e <= edit_d do
+	  (* add transitions from each state *)
+          List.iter (fun t_type -> 
+            match t_type with
+              | NCorrect _ -> 
+		my_nfa := (A.add_transition !my_nfa (!i, !e) (NCorrect (String.get str !i)))
+		  (!i+1, !e)
+              | Epsilon -> if !e < edit_d then 
+                  my_nfa := (A.add_transition !my_nfa (!i,!e) Epsilon (!i+1, !e+1))
+              | Anyi -> if !e < edit_d then 
+                  my_nfa := (A.add_transition !my_nfa  (!i,!e) Anyi (!i, !e+1))
+              | Anys -> if !e < edit_d then 
+                  my_nfa := (A.add_transition !my_nfa (!i,!e) Anys (!i+1, !e+1))) (A.tran_types());
+          e := !e + 1
+	done;
+	i := !i + 1;
+	e := 0
+      done in
+    let add_final_states () =
+      let e = ref 0 in
       while !e <= edit_d do
-        (* add transitions from each state *)
-        List.iter (fun t -> 
-      	  let current = (State.state_of_indices !i !e) in
-      	  match State.transition current t str edit_d with
-      	    | None -> ()
-      	    | Some (st,tr) -> 
-                transitions := add_transition !transitions current tr st
-          )
-    	  (State.list_of_trans());
-        e := !e + 1
-      done;
-      i := !i + 1;
-      e := 0
-    done in
-  let add_final_states () =
-    let e = ref 0 in
-    while !e <= edit_d do
-      final_states := (StateSet.add (State.state_of_indices len !e) (!final_states));
-      if !e < edit_d then
-      	let current = (State.state_of_indices len !e) in
-      	let st, tr = State.transition_final current in
-      	transitions := (add_transition !transitions current tr st);
-      e := !e + 1;
-    done in
-  add_edges();
-  add_final_states();
-  (!transitions, starting_state, !final_states)
+	my_nfa := A.add_final !my_nfa (len, !e);
+	if !e < edit_d then
+	  my_nfa := A.add_transition !my_nfa (len, !e) Anyi (len, !e+1);
+	e := !e + 1
+      done in
+    add_edges();
+    add_final_states();
+    !my_nfa
+
+  let print_nfa = A.print_automata
 
   let unit_tests () =
-    failwith "implement"
+    let my_nfa = build "food" 1 in
+    let state_set = NfaStateSet.singleton (0,1) in
+    let state_set = NfaStateSet.add (1,1) state_set in
+    let states = next_state my_nfa state_set (NCorrect 'f') in
+    NfaStateSet.iter A.print_state states
     
-  let add_final auto st =
-    failwith "put here"
-
-  let singleton st =
-    failwith "return singleton"
-
-
-
-  (* debugging function to print a dfa *)
-
-  let print_automata my_nfa =
-    let string_of_state_set s_set =
-      let str = StateSet.fold (fun s str -> str ^ (State.string_of_state s) ^ ", ") s_set "" in
-      (* remove last comma *)
-      String.sub str 0 (String.rindex_from str (String.length str - 1) ',') in
-    let string_of_trans_dict d =
-      let string_of_inner i =
-	TranDict.fold (fun k v str ->
-	  str ^ "   " ^ (State.string_of_tran k) ^ " --> " ^ (State.string_of_state v) ^ "\n"
-	) i "" in
-      StateDict.fold (fun k v str ->
-	str ^ (State.string_of_state k) ^ " -->\n" ^ (string_of_inner v) ^ "\n"
-      ) d "" in
-    let trans_dict, start, final_states = my_nfa in
-    print_string ("Start State: " ^ (State.string_of_state start));
-    print_newline ();
-    print_string ("Final States: " ^ (string_of_state_set final_states));
-    print_newline ();
-    print_string "--------------------------------\n";
-    print_string (string_of_trans_dict trans_dict)
-
 end

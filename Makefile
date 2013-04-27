@@ -15,6 +15,7 @@ CAMLFLAGS = -g
 SRC = \
 	dict.ml \
 	type.ml \
+	automata.ml \
 	dfa.ml \
 	nfa.ml \
 	lev.ml \
