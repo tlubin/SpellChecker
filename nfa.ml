@@ -1,5 +1,7 @@
 open Type
+open Automata
 
+(*
 module type NFA =
 sig
   type nfa_t
@@ -32,10 +34,10 @@ sig
   val unit_tests: unit -> unit
 
 end
+*)
 
-module Nfa (State: STATE) : NFA =
+module Nfa (State: STATE) : AUTOMATA =
 struct
-
   type state = State.t
   type tran = State.tran
 
@@ -61,7 +63,7 @@ struct
   type n_inner = state TranDict.t
 
   (* transitions dictionary * starting state * final states *)
-  type nfa_t = (n_inner StateDict.t * state * StateSet.t)
+  type t = (n_inner StateDict.t * state * StateSet.t)
 
 
   (* return the start state of an nfa *)
@@ -69,7 +71,7 @@ struct
     let _, start, _ = my_nfa in start
 
   (* get the next state given an origin and transition type *)
-  let next_state (my_nfa: nfa_t) (orig: state) (trans: tran) =
+  let next_state (my_nfa: t) (orig: state) (trans: tran) =
     let trans_dict, start, final_states = my_nfa in
     assert(StateDict.mem orig trans_dict);
     let inner_dict = StateDict.find orig trans_dict in
@@ -77,14 +79,14 @@ struct
     TranDict.find trans inner_dict
 
   (* return a list of transitions from a given state *)
-  let get_transitions (my_nfa: nfa_t) (orig: state) =
+  let get_transitions (my_nfa: t) (orig: state) =
     let trans_dict, _, _ = my_nfa in 
     if not (StateDict.mem orig trans_dict) then []
     else TranDict.fold (fun tran _ trans -> tran::trans) 
       (StateDict.find orig trans_dict) []
 
   (* return whether a given state is a final state *)
-  let is_final (my_nfa: nfa_t) (state: state) =
+  let is_final (my_nfa: t) (state: state) =
     let _, _, final_states = my_nfa in
     StateSet.mem state final_states
 
@@ -95,10 +97,11 @@ struct
   let tran_types = State.list_of_trans()
 
   (* Build NFA Helpers *)
-  let add_transition (transitions: n_inner StateDict.t) (src: state) 
+  let add_transition (transitions: t) (src: state) 
     (tran: tran) (dest: state) =
     (* check if our starting state already exists in state dictionary *)
     (* do asserts here later for overwriting *)
+    let transitions, _, _ = transitions in
     if StateDict.mem src transitions then
       let inner_dict = StateDict.find src transitions in
       let inner_dict = TranDict.add tran dest inner_dict in
@@ -118,13 +121,13 @@ let build str edit_d =
     let e = ref 0 in
     while !i < len do
       while !e <= edit_d do
-	(* add transitions from each state *)
+        (* add transitions from each state *)
         List.iter (fun t -> 
-	  let current = (State.state_of_indices !i !e) in
-	  match State.transition current t str edit_d with
-	    | None -> ()
-	    | Some (st,tr) -> transitions := add_transition !transitions current tr st)
-	  (State.list_of_trans());
+      	  let current = (State.state_of_indices !i !e) in
+      	  match State.transition current t str edit_d with
+      	    | None -> ()
+      	    | Some (st,tr) -> transitions := add_transition !transitions current tr st)
+    	  (State.list_of_trans());
         e := !e + 1
       done;
       i := !i + 1;
@@ -135,12 +138,12 @@ let build str edit_d =
     while !e <= edit_d do
       final_states := (StateSet.add (State.state_of_indices len !e) (!final_states));
       if !e < edit_d then
-	let current = (State.state_of_indices len !e) in
-	let st, tr = State.transition_final current in
-	transitions := (add_transition !transitions current tr st);
-	e := !e + 1
+      	let current = (State.state_of_indices len !e) in
+      	let st, tr = State.transition_final current in
+      	transitions := (add_transition !transitions current tr st);
+	      e := !e + 1
       else 
-	e := !e + 1
+	      e := !e + 1
     done in
   add_edges();
   add_final_states();
@@ -149,10 +152,17 @@ let build str edit_d =
   let unit_tests () =
     failwith "implement"
     
+  let add_final auto st =
+    failwith "put here"
+
+  let singleton st =
+    failwith "return singleton"
+
+
 
   (* debugging function to print a dfa *)
 
-  let print_nfa my_nfa =
+  let print_automata my_nfa =
     let string_of_state_set s_set =
       let str = StateSet.fold (fun s str -> str ^ (State.string_of_state s) ^ ", ") s_set "" in
       (* remove last comma *)

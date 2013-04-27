@@ -1,62 +1,64 @@
+open Nfa2
+open Dfa2
+open Type
+open Dict
+
 module type LEV =
 sig
   val find_matches : string -> int -> string -> string list
 end
 
-module Levenshtein (Nfa: AUTOMATA) (Dfa: AUTOMATA) (Dict: DICT) : LEV =
+module Levenshtein (Nfa: NFA) (Dfa: DFA) (Dict: DICT) : LEV =
 struct
-  let build_nfa str edit_d : Nfa.nfa_t =
-    (* build an Nfa from a string and edit distance *)
-    let my_nfa = ref (Nfa.singleton()) in
-    let len = String.length str in
-    let add_edges () =
-      let i = ref 0 in
-      let e = ref 0 in
-      while !i < len do
-	while !e <= edit_d do
-          List.iter (fun t -> 
-	    let current = (State.state_of_indices !i !e) in
-	    match State.transition current t str edit_d with
-	      | None -> ()
-	      | Some (st,tr) -> transitions := add_transition !transitions current tr st)
-	    (State.list_of_trans());
-	  e := !e + 1
-	done;
-	i := !i + 1;
-	e := 0
-      done in
-    let add_final_states () =
-      let e = ref 0 in
-      while !e <= edit_d do
-	final_states := (StateSet.add (State.state_of_indices len !e) (!final_states));
-	if !e < edit_d then
-	  let current = (State.state_of_indices len !e) in
-	  let st, tr = State.transition_final current in
-	  transitions := (add_transition !transitions current tr st);
-	  e := !e + 1
-	else 
-	  e := !e + 1
-      done in
-    add_edges();
-    add_final_states();
 
+  let add_tran my_dfa (tran: nfa_tran) (orig: dfa_state) (dest: dfa_state) = 
+    match tran with
+      | Anyi | Anys -> Dfa.add_transition my_dfa orig Other dest
+      | NCorrect c -> Dfa.add_transition my_dfa orig (DCorrect c) dest
+      | Epsilon -> failwith "bad call to add_tran"
 
+  let to_dfa (my_nfa : Nfa.t) : Dfa.t =
+    let my_dfa = Dfa.singleton (Nfa.expand my_nfa 
+				  (NfaStateSet.singleton (Nfa.start_state my_nfa))) in
+    let frontier = [Dfa.start_state my_dfa] in
+    let seen = DfaStateSet.empty in
+    let rec add_transitions my_dfa (origin: dfa_state) (trans : nfa_tran list)
+	(frontier: dfa_state list) (seen: DfaStateSet.t) : Dfa.t  =
+      match trans with
+	| [] -> build_dfa my_dfa frontier seen
+	| tran::tl ->
+	  (match tran with
+	    | Epsilon -> add_transitions my_dfa origin tl frontier seen
+	    | NCorrect _ | Anyi | Anys ->
+	      let new_state : NfaStateSet.t = Nfa.next_state my_nfa origin tran in
+	      if not (DfaStateSet.mem new_state seen) then
+		let seen = DfaStateSet.add new_state seen in
+		let frontier = new_state::frontier in
+		if Nfa.has_final my_nfa new_state then
+		  let my_dfa = Dfa.add_final my_dfa new_state in
+		  let my_dfa = add_tran my_dfa tran origin new_state in
+		  add_transitions my_dfa origin tl frontier seen
+		else 
+		  let my_dfa = add_tran my_dfa tran origin new_state in
+		  add_transitions my_dfa origin tl frontier seen
+              else
+		let my_dfa = add_tran my_dfa tran origin new_state in
+		add_transitions my_dfa origin tl frontier seen)
+    and build_dfa my_dfa (frontier: dfa_state list)  (seen: DfaStateSet.t) : Dfa.t =
+      match frontier with
+	| [] -> my_dfa
+	| current::tl ->
+	  let transitions : nfa_tran list = Nfa.get_transitions my_nfa current in
+	  add_transitions my_dfa current transitions tl seen
+    in build_dfa my_dfa frontier seen
 
-  let next_valid_string (my_dfa : Dfa.dfa_t) str : string =
-    failwith "askldjflska"
-
-  let expand my_nfa states : (Nfa.state set) =
-    failwith "aslkfjasldk"
-
-  let to_dfa (my_nfa : Nfa.nfa_t) : Dfa.dfa_t =
-    failwith "sadfasdf"
 
   let find_matches word distance dict_file =
-    let word_nfa = build_nfa word distance in
+    let word_nfa = Nfa.build word distance in
     let word_dfa = to_dfa(word_nfa) in
     let mydict = Dict.create dict_file in
     let rec find_matches_rec (current: string) (matches : string list) =
-      match next_valid_string word_dfa current with
+      match Dfa.next_valid_string word_dfa current with
 	| Some str ->
 	  let next_dict = Dict.next_entry mydict str in
 	  if next_dict = "" then matches
@@ -68,8 +70,3 @@ struct
     in find_matches_rec "" []
 
 end
-
-module 
-module Nfa = Automata (MyNfaState)
-module Dfa = Automata (MyDfaState)
-module MyLev = Levenshtein (Nfa) (Dfa) (Dict.Dict)
