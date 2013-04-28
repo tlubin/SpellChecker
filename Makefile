@@ -26,7 +26,7 @@ OBJ = $(SRC:.ml=.cmo)
 #Executable:
 
 $(PROG): $(OBJ)
-	$(CAMLC) $(CAMLFLAGS) $(OBJ) -o $(PROG)
+	$(CAMLC) $(CAMLFLAGS) unix.cma $(OBJ) -o $(PROG)
 
 doc: $(OBJ)
 	$(CAMLDOC) -html $(SRC)

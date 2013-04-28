@@ -6,6 +6,7 @@ open Dict
 module type LEV =
 sig
   val find_matches : string -> int -> string -> string list
+  val find_matches_time : string -> int -> string -> string list
 end
 
 module Levenshtein (Nfa: NFA) (Dfa: DFA) (Dict: DICT) : LEV =
@@ -68,5 +69,31 @@ struct
 	    else find_matches_rec next_dict matches
 	| None -> matches
     in find_matches_rec "" []
+
+  let find_matches_time word distance dict_file =
+    let t1 = Unix.time() in
+    let word_nfa = Nfa.build word distance in
+    let t2 = Unix.time() in
+    Printf.printf "time to build nfa from word: %f\n" (t2-.t1);
+    let word_dfa = to_dfa(word_nfa) in
+    let t3 = Unix.time() in
+    Printf.printf "time to convert nfa to dfa: %f\n" (t3-.t2);
+    let mydict = Dict.create dict_file in
+    let t4 = Unix.time() in
+    Printf.printf "time to build the dictionary: %f\n" (t4-.t3);
+    let rec find_matches_rec (current: string) (matches : string list) =
+      match Dfa.next_valid_string word_dfa current with
+	| Some str ->
+	  let next_dict = Dict.next_entry mydict str in
+	  if next_dict = "" then matches
+	  else 
+	    if next_dict = str 
+	    then find_matches_rec (str ^ (Char.escaped(Dict.first_letter()))) (str::matches)
+	    else find_matches_rec next_dict matches
+	| None -> matches in
+    let answer = find_matches_rec "" [] in
+    let t5 = Unix.time() in
+    Printf.printf "time to find matches: %f\n" (t5-.t4);
+    answer
 
 end

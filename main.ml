@@ -12,11 +12,13 @@ let main () =
   if Array.length Sys.argv <> 5 then 
     (print_string usage; exit 0)
   else
-  let dict = Sys.argv.(1) in
-  let word = Sys.argv.(3) in
-  let edit_d = int_of_string Sys.argv.(4) in
-  let matches = MyLev.find_matches word edit_d dict in
-  List.iter (fun x -> print_string (x ^ "\n")) matches
+    
+    let dict = Sys.argv.(1) in
+    let word = Sys.argv.(3) in
+    let edit_d = int_of_string Sys.argv.(4) in
+    let matches = MyLev.find_matches_time word edit_d dict in
+    Printf.printf "%d\n" (List.length matches)
+(*    List.iter (fun x -> print_string (x ^ "\n")) matches *)
 ;;
 
 main();;
