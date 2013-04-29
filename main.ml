@@ -6,6 +6,12 @@ open Lev
 module MyLev = Levenshtein (Nfa) (Dfa) (Dict)
 
 let main () =
+  (* If user attempts to run spellchecker directly, provide correct usage and exit *)
+  if Array.length Sys.argv <> 4 then
+    let usage = "Usage: Run './main.sh' to start the program." in
+    (print_endline usage; exit 0)
+  else
+
   (* path to the dictionary *)
   let dict = Sys.argv.(1) in
   (* function that asks user for valid edit distance between 0 and 3 *)
@@ -27,7 +33,7 @@ let main () =
     print_string "Enter word: ";
     let word = read_line () in
     let matches = MyLev.find_matches word edit_d dict in
-    List.iter (fun x -> print_string (x ^ "\n")) matches in
+    List.iter (fun x -> print_endline x) matches in
 
   while true do
     do_action ()
