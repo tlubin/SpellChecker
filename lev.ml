@@ -14,7 +14,7 @@ end
 module Levenshtein (Nfa: NFA) (Dfa: DFA) (D: DICT) : LEV =
 struct
 
-  type dict_t = D.dict_t
+  type dict_t = D.t
   let create_dict = D.create
 
   let add_tran my_dfa (tran: nfa_tran) (orig: dfa_state) (dest: dfa_state) = 
