@@ -6,8 +6,8 @@ sig
   val create : string -> dict_t
 
   (** functions to get letters from alphabet *)
-  val last_letter : unit -> char
-  val first_letter : unit -> char
+  val last_letter : char
+  val first_letter : char
   val next_letter : char -> char
 
   (** return the next valid entry in the dictionary at or past the input *)
@@ -20,8 +20,8 @@ module Dict : DICT =
 struct
   type dict_t = string array
 
-  let last_letter () = 'z'
-  let first_letter () = 'a'
+  let last_letter = 'z'
+  let first_letter = 'a'
 
   (* do not call on the last_letter of the alphabet *)
   let next_letter l =  Char.chr ((Char.code l) + 1)

@@ -69,7 +69,7 @@ struct
 	  if next_dict = "" then matches
 	  else 
 	    if next_dict = str 
-	    then find_matches_rec (str ^ (Char.escaped(D.first_letter()))) (str::matches)
+	    then find_matches_rec (str ^ (Char.escaped(D.first_letter))) (str::matches)
 	    else find_matches_rec next_dict matches
 	| None -> matches
     in find_matches_rec "" []
@@ -91,7 +91,7 @@ struct
 	  if next_dict = "" then matches
 	  else 
 	    if next_dict = str 
-	    then find_matches_rec (str ^ (Char.escaped(D.first_letter()))) (str::matches)
+	    then find_matches_rec (str ^ (Char.escaped(D.first_letter))) (str::matches)
 	    else find_matches_rec next_dict matches
 	| None -> matches in
     let answer = find_matches_rec "" [] in

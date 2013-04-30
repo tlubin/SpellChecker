@@ -12,8 +12,8 @@ let main () =
     (print_endline usage; exit 0)
   else
 
-  (* path to the dictionary *)
-  let myDict = MyLev.create_dict Sys.argv.(1) in
+  (* Create the dictionary *)
+  let dictionary = MyLev.create_dict Sys.argv.(1) in
   (* function that asks user for valid edit distance between 0 and 3 *)
   let rec get_edit_d () : int =
     print_string "Please provide your edit distance: ";
@@ -32,7 +32,7 @@ let main () =
   let do_action () =
     print_string "Enter word: ";
     let word = read_line () in
-    let matches = MyLev.find_matches word edit_d myDict in
+    let matches = MyLev.find_matches word edit_d dictionary in
     List.iter (fun x -> print_endline x) matches in
 
   while true do
