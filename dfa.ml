@@ -87,7 +87,7 @@ struct
 	  | false, true -> Some (DfaTranDict.find Other t_dict, letter)
 	  | false, false ->
 	    (* fold over dict to find the next transition *)
-	    if letter = Dict.last_letter() || DfaTranDict.cardinal t_dict = 0 then None
+	    if letter = Dict.last_letter || DfaTranDict.cardinal t_dict = 0 then None
 	    else 
 	      let next_letter =
 		DfaTranDict.fold (fun tran _ next_so_far ->
@@ -102,11 +102,11 @@ struct
      letter as an outedge. None if there is no such edge *)
   let find_next_edge my_dfa current_state (letter: char option) : string option =
     (* return None right away if the letter is last of alphabet *)
-    if letter = Some (Dict.last_letter()) then None 
+    if letter = Some (Dict.last_letter) then None 
     else
       let next_letter =
 	(match letter with
-	  | None -> Dict.first_letter()
+	  | None -> Dict.first_letter
 	  | Some l -> Dict.next_letter l) in
      let rec helper state (letter: char) (path: string) : string option =
        (* letter is the first character to try *)
@@ -115,7 +115,7 @@ struct
 	 | Some (s,l) -> 
 	   let new_path = path ^ (Char.escaped l) in
 	   if A.is_final my_dfa s then Some new_path
-	   else helper s (Dict.first_letter()) new_path
+	   else helper s (Dict.first_letter) new_path
      in helper current_state next_letter ""
 
 

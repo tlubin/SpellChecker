@@ -1,27 +1,27 @@
 module type DICT =
 sig
-  type dict_t
+  type t
 
   (** create a dict_t given a filename string *)
-  val create : string -> dict_t
+  val create : string -> t
 
   (** functions to get letters from alphabet *)
-  val last_letter : unit -> char
-  val first_letter : unit -> char
+  val last_letter : char
+  val first_letter : char
   val next_letter : char -> char
 
   (** return the next valid entry in the dictionary at or past the input *)
-  val next_entry: dict_t -> string -> string
+  val next_entry: t -> string -> string
 
   val unit_tests : unit -> unit
 end
 
 module Dict : DICT =
 struct
-  type dict_t = string array
+  type t = string array
 
-  let last_letter () = 'z'
-  let first_letter () = 'a'
+  let last_letter = 'z'
+  let first_letter = 'a'
 
   (* do not call on the last_letter of the alphabet *)
   let next_letter l =  Char.chr ((Char.code l) + 1)
