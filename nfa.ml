@@ -24,15 +24,16 @@ sig
   val has_final : t -> NfaStateSet.t -> bool
 
   val build : string -> int -> t
-  val print_nfa : t -> unit
 
-  val unit_tests : unit -> unit
+(*  val print_nfa : t -> unit
+
+  val unit_tests : unit -> unit *)
 end
 
 module Nfa : NFA =
 struct
 
-  module A = Automata (MyNfaState)
+  module A = Automata (NfaStateOrderedType) (NfaStateSet) (NfaStateDict) (NfaTranDict)
 
   type t = A.t
 
@@ -44,13 +45,15 @@ struct
       else
 	let state = NfaStateSet.choose states in
 	let states' = NfaStateSet.remove state states in
-	let trans = A.get_transitions my_nfa state in
-	(* add all elements from trans into total_trans and avoid duplicates *)
-	(* ALGORITHMICALLY BAD!! *)
-	let new_total =	List.fold_left (fun total curr -> 
-	  if not (List.mem curr total) then curr::total
-	  else total) total_trans trans in
-	helper states' new_total
+	match  A.get_transitions my_nfa state with
+	  | None -> helper states' total_trans
+	  | Some t_dict ->
+	    (* add all elements from trans into total_trans and avoid duplicates *)
+	    (* ALGORITHMICALLY BAD!! *)
+	    let new_total = NfaTranDict.fold (fun tran _ total -> 
+	      if not (List.mem tran total) then tran::total
+	      else total) t_dict total_trans in
+	    helper states' new_total
     in helper states []
 	    
 	  
@@ -82,17 +85,16 @@ struct
   (* take in a transition and a starting state and return a set of states
      reachable by Any or the passed in transition *)
   let get_dests my_nfa orig t =
-    List.fold_left (fun dests tr ->
-      match tr with
-	| NCorrect c ->
-	  if NCorrect c = t then
-	    let dest = extract_state (A.next_state my_nfa orig tr) in
-	    NfaStateSet.add dest dests
-	  else dests
-	| Anyi | Anys ->
-	  let dest = extract_state (A.next_state my_nfa orig tr) in
-	  NfaStateSet.add dest dests
-	| Epsilon -> dests) (NfaStateSet.empty) (A.get_transitions my_nfa orig)
+    match A.get_transitions my_nfa orig with
+      | None -> NfaStateSet.empty
+      | Some t_dict ->
+	NfaTranDict.fold (fun tr dest dests ->
+	  match tr with
+	    | NCorrect c ->
+	      if NCorrect c = t then NfaStateSet.add dest dests
+	      else dests
+	    | Anyi | Anys -> NfaStateSet.add dest dests
+	    | Epsilon -> dests) t_dict (NfaStateSet.empty)
 
   (* takes in a set of states and returns a new set of states
      reachable by a given transition. i.e. if a Correct is
@@ -111,7 +113,7 @@ struct
     in expand my_nfa (helper origs (NfaStateSet.empty))
 
   let build str edit_d = 
-    let my_nfa = ref (A.singleton_default()) in
+    let my_nfa = ref (A.singleton (0,0)) in
     let len = String.length str in
     let add_edges () =
       let i = ref 0 in
@@ -129,7 +131,7 @@ struct
               | Anyi -> if !e < edit_d then 
                   my_nfa := (A.add_transition !my_nfa  (!i,!e) Anyi (!i, !e+1))
               | Anys -> if !e < edit_d then 
-                  my_nfa := (A.add_transition !my_nfa (!i,!e) Anys (!i+1, !e+1))) (A.tran_types());
+                  my_nfa := (A.add_transition !my_nfa (!i,!e) Anys (!i+1, !e+1))) nfa_tran_list;
           e := !e + 1
 	done;
 	i := !i + 1;
@@ -146,7 +148,7 @@ struct
     add_edges();
     add_final_states();
     !my_nfa
-
+(*
   let print_nfa = A.print_automata
 
   let unit_tests () =
@@ -155,5 +157,5 @@ struct
     let state_set = NfaStateSet.add (1,1) state_set in
     let states = next_state my_nfa state_set (NCorrect 'f') in
     NfaStateSet.iter A.print_state states
-    
+*)  
 end

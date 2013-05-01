@@ -5,11 +5,11 @@ sig
   type t
   type state
   type tran
+  type tran_dict
 
   (* METHODS TO BUILD AUTOMATA *)
 
   (* singleton returns an automata, with given start state or default *)
-  val singleton_default: unit -> t
   val singleton: state -> t
 
   (* takes automata and returns start state *)
@@ -26,56 +26,38 @@ sig
   (* gets next state of automata *)
   val next_state: t -> state -> tran -> state option
 
-  (* get all transitions (list) leaving one state *)
-  val get_transitions: t -> state -> tran list
+  (* get all transitions leaving one state *)
+  val get_transitions: t -> state -> tran_dict option
 
   (* bool, check if a state is a final state *)
   val is_final: t -> state -> bool 
 
-  val tran_types : unit -> tran list
-
   (* debug function to print automata *)
-  val print_automata: t -> unit
-  val print_state: state -> unit
+(*  val print_automata: t -> unit
+  val print_state: state -> unit *)
 end
 
-module Automata (State: STATE) : AUTOMATA with type state = State.t with type tran = State.tran =
+module Automata (StateOrderedType: OrderedType) 
+  (StateSet: Set.S with type elt = StateOrderedType.t) 
+  (StateDict: Map.S with type key = StateOrderedType.t) 
+  (TranDict: Map.S) : AUTOMATA with type state = StateOrderedType.t
+    with type tran = TranDict.key with type tran_dict = StateSet.elt TranDict.t =
 struct
 
-  type state = State.t
-  type tran = State.tran
-
-  (* other helpful modules and types *)
-  module StateSet = Set.Make(
-    struct
-      type t = state
-      let compare a b = compare a b
-    end)
-
-  module StateDict = Map.Make(
-    struct
-      type t = state
-      let compare a b = compare a b
-    end)
-
-  module TranDict = Map.Make(
-    struct
-      type t = tran
-      let compare a b = compare a b
-    end)
-
-  type inner = state TranDict.t
+  type state = StateOrderedType.t
+  type tran = TranDict.key
+  type tran_dict = state TranDict.t
 
   (* transitions dictionary * starting state * final states *)
-  type t = (inner StateDict.t * state * StateSet.t)
+  type t = (tran_dict StateDict.t * state * StateSet.t)    
 
   (* return a singleton dfa the given state *)
   let singleton (state: state) = 
     (StateDict.singleton state (TranDict.empty), state, StateSet.empty)
 
-  let singleton_default () =
+(*  let singleton_default () =
     let start = State.start_state() in
-    (StateDict.singleton start (TranDict.empty), start, StateSet.empty)
+    (StateDict.singleton start (TranDict.empty), start, StateSet.empty) *)
 
   (* return the start state of an nfa *)
   let start_state a = 
@@ -92,7 +74,6 @@ struct
     let trans_dict, start, final_states = a in
     if StateDict.mem orig trans_dict then 
       (let inner_dict = StateDict.find orig trans_dict in
-(*       assert(not (DTranDict.mem trans inner_dict)); *)
        let inner_dict' = TranDict.add trans dest inner_dict in
        let trans_dict' = StateDict.add orig inner_dict' trans_dict in
       (trans_dict', start, final_states))
@@ -113,17 +94,15 @@ struct
   (* return a list of transitions from a given state *)
   let get_transitions (a: t) (orig: state) =
     let trans_dict, _, _ = a in 
-    if not (StateDict.mem orig trans_dict) then []
-    else TranDict.fold (fun tran _ trans -> tran::trans) 
-      (StateDict.find orig trans_dict) []
+    if not (StateDict.mem orig trans_dict) then None
+    else Some (StateDict.find orig trans_dict)
 
   (* return whether a given state is a final state *)
   let is_final (a: t) (state: state) =
     let _, _, final_states = a in
     StateSet.mem state final_states
 
-  let tran_types () = State.list_of_trans()
-
+(*
   let print_state s = print_string (State.string_of_state s)
 
   let print_automata a =
@@ -146,6 +125,6 @@ struct
     print_newline ();
     print_string "--------------------------------\n";
     print_string (string_of_trans_dict trans_dict)
-
+*)
 
 end

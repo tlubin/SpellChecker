@@ -32,7 +32,7 @@ let main () =
   let do_action () =
     print_string "Enter word: ";
     let word = read_line () in
-    let matches = MyLev.find_matches word edit_d dict in
+    let matches = MyLev.find_matches_time word edit_d dict in
     List.iter (fun x -> print_endline x) matches in
 
   while true do
