@@ -8,7 +8,7 @@ sig
   type dict_t
   val create_dict : string -> dict_t
   val find_matches : string -> int -> dict_t -> string list
-  val find_matches_time : string -> int -> dict_t -> string list
+(*  val find_matches_time : string -> int -> dict_t -> string list *)
 end
 
 module Levenshtein (Nfa: NFA) (Dfa: DFA) (D: DICT) : LEV =
@@ -74,7 +74,7 @@ struct
 	| None -> matches
     in find_matches_rec "" []
 
-  let find_matches_time word distance dict =
+(*  let find_matches_time word distance dict =
     let word_nfa = Nfa.build word distance in
     let t2 = Unix.gettimeofday() in
     let word_dfa = to_dfa(word_nfa) in
@@ -95,6 +95,6 @@ struct
     let answer = find_matches_rec "" [] in
     let t5 = Unix.time() in
     Printf.printf "time to find matches: %f\n" (t5-.t4);
-    answer
+    answer *)
 
 end

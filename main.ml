@@ -32,7 +32,7 @@ let main () =
   let do_action () =
     print_string "Enter word: ";
     let word = read_line () in
-    let matches = MyLev.find_matches_time word edit_d dictionary in
+    let matches = MyLev.find_matches word edit_d dictionary in
     List.iter (fun x -> print_endline x) matches in
 
   while true do
@@ -40,4 +40,16 @@ let main () =
   done
 ;;
 
-main();;
+let main2 () =
+  if Array.length Sys.argv <> 5 then 
+    (print_string "Usage: ./spellchecker dictpath dictcount word edit_d\n"; exit 0)
+  else
+    let dict = MyLev.create_dict Sys.argv.(1) in
+    let word = Sys.argv.(3) in
+    let edit_d = int_of_string Sys.argv.(4) in
+    let matches = MyLev.find_matches word edit_d dict in
+  List.iter (fun x -> print_string (x ^ "\n")) matches
+;;
+
+
+main2();;

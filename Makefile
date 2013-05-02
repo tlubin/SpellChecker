@@ -4,11 +4,11 @@ PROG = spellchecker
 # Setup
 LIBS = \
 
-CAMLC = ocamlc
+CAMLC = ocamlopt
 CAMLDOC = ocamldoc
 CAMLFLAGS =
 
-%.cmo: %.ml
+%.cmx: %.ml
 	$(CAMLC) $(CAMLFLAGS) -c $<
 
 # Source and Object files
@@ -21,12 +21,12 @@ SRC = \
 	lev.ml \
 	main.ml \
 
-OBJ = $(SRC:.ml=.cmo)
+OBJ = $(SRC:.ml=.cmx)
 
 #Executable:
 
 $(PROG): $(OBJ)
-	$(CAMLC) $(CAMLFLAGS) unix.cma $(OBJ) -o $(PROG)
+	$(CAMLC) $(CAMLFLAGS) $(OBJ) -o $(PROG)
 
 doc: $(OBJ)
 	$(CAMLDOC) -html $(SRC)
@@ -36,7 +36,7 @@ doc: $(OBJ)
 all: $(PROG)
 
 clean: 
-	rm -rf *.cmo *.cmi *.html *.css $(PROG)
+	rm -rf *.cmo *.cmi *.cmx *.o *.html *.css $(PROG)
 
 .DEFAULT_GOAL := $(PROG)
 .PHONY: doc build run clean
