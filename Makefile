@@ -20,6 +20,7 @@ SRC = \
 	nfa.ml \
 	lev.ml \
 	main.ml \
+	qwerty.ml \
 
 OBJ = $(SRC:.ml=.cmx)
 

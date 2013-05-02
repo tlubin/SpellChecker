@@ -61,6 +61,13 @@ module DfaStateDict = Map.Make(
     let compare = compare
   end)
 
+module KeyboardMap = Map.Make(
+  struct
+    type t = int
+    let compare = compare
+  end
+)
+
 module type STATE =
 sig
 
