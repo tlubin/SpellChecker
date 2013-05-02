@@ -3,7 +3,7 @@ sig
   type t
 
   (** create a dict_t given a filename string *)
-  val create : string -> t
+  val create : string -> int -> t
 
   (** functions to get letters from alphabet *)
   val last_letter : char
@@ -13,7 +13,7 @@ sig
   (** return the next valid entry in the dictionary at or past the input *)
   val next_entry: t -> string -> string
 
-  val unit_tests : unit -> unit
+(*  val unit_tests : unit -> unit *)
 end
 
 module Dict : DICT =
@@ -26,14 +26,11 @@ struct
   (* do not call on the last_letter of the alphabet *)
   let next_letter l =  Char.chr ((Char.code l) + 1)
 
-  let create filename =
-    (* read in file from /usr/share/dict/web2 into an array *) 
+  let create filename count =
     let fp = open_in filename in
     let get_word i = String.lowercase (input_line fp) in
-    let len = int_of_string Sys.argv.(2) in (* length of the dictionary is passed in by the shell file *)
-    let a = Array.init len get_word in
-    close_in fp;
-    a
+    let a = Array.init count get_word in
+    close_in fp; a
     
     (* make array of size (count 0 fp) *)
     (* move fp back to the start and then read in the words into
@@ -59,12 +56,12 @@ struct
     in
     helper 0 ((Array.length dict)-1)
     
-  (*testing*)
+(*  (*testing*)
   let unit_tests () =
     let d = create "/usr/share/dict/web2" in
     assert(next_entry d "abstracta" = "abstracted");
     assert(next_entry d "acinara" = "acinarious");
     assert(next_entry d "flooded" = "flooded");
     ()
-
+*)
 end
