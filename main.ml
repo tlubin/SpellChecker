@@ -2,6 +2,7 @@ open Dfa
 open Nfa
 open Dict
 open Lev
+open Qwerty
 
 module MyLev = Levenshtein (Nfa) (Dfa) (Dict)
 
@@ -49,6 +50,12 @@ let main2 () =
     let edit_d = int_of_string Sys.argv.(4) in
     let matches = MyLev.find_matches word edit_d dict in
   List.iter (fun x -> print_string (x ^ "\n")) matches
+;;
+
+module MyQ = Qwertykey
+
+let main3 () =
+  MyQ.unit_tests ()
 ;;
 
 

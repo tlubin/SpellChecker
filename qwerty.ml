@@ -10,14 +10,15 @@ sig
   val keyboard_word_distance: t -> string -> string -> int
   val keyboard_word_match: t -> string -> string -> float
 
+  val unit_tests : unit -> unit
 end
 
-module Qwerty =
+module Qwertykey : KEYBOARD =
 struct
   (* this is the type of the (KeyboardMap, max_distance) 
    * KeyboardMap maps ASCII values to (x,y) locations
    *)
-  type t = (((int*int) KeyboardMap.t) * int)
+  type t = (((int*int) KeyboardMap.t))
 
   (* returns max distance of the QWERTY character map *)
   let keyboard_max_distance = 13
@@ -38,7 +39,7 @@ struct
     traverser row1 0;
     traverser row2 1;
     traverser row3 2;
-    (!kmap, keyboard_max_distance)
+    (!kmap)
 
   (*
       This function computes the distance between the two characters passed
@@ -96,4 +97,16 @@ struct
         l := float_of_int l1);
     1. -. (float_of_int (keyboard_word_distance kmap s1 s2)) /. (!l *. (float_of_int keyboard_max_distance))
 
+
+  let print_sample kmap =
+    let s1 = "isntant" in
+    let strings = ["instant"; "visitant"; "montant"; "intact"] in
+    List.iter (fun str -> 
+      Printf.printf "%s %s : %s\n" s1 str (string_of_float (keyboard_word_match kmap s1 str ))
+    ) strings
+
+
+  let unit_tests () =
+    let kmap = build_map () in
+    print_sample kmap
 end
