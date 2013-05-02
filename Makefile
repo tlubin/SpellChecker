@@ -6,7 +6,7 @@ LIBS = \
 
 CAMLC = ocamlc
 CAMLDOC = ocamldoc
-CAMLFLAGS = -g
+CAMLFLAGS =
 
 %.cmo: %.ml
 	$(CAMLC) $(CAMLFLAGS) -c $<

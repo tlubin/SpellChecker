@@ -82,25 +82,26 @@ struct
       | None -> None
       | Some t_dict -> 
 	(* get first transition *)
-	match DfaTranDict.mem (DCorrect letter) t_dict, DfaTranDict.mem  (Other) t_dict with
-	  | true,_ -> Some (DfaTranDict.find (DCorrect letter) t_dict, letter)
-	  | false, true -> Some (DfaTranDict.find Other t_dict, letter)
-	  | false, false ->
-	    (* fold over dict to find the next transition *)
-	    if letter = Dict.last_letter || DfaTranDict.cardinal t_dict = 0 then None
-	    else 
-	      let next_letter =
-		DfaTranDict.fold (fun tran _ next_so_far ->
-		  match tran with
-		    | DCorrect l -> if compare l letter > 0 && compare l next_so_far < 0
-		      then l else next_so_far
-		    | Other -> failwith "shouldn't happen") t_dict '{' (* something after 'z' *) in
-	      if next_letter = '{' then None
-	      else Some (DfaTranDict.find (DCorrect next_letter) t_dict, next_letter)
+	if DfaTranDict.mem (DCorrect letter) t_dict
+	then Some (DfaTranDict.find (DCorrect letter) t_dict, letter)
+	else if DfaTranDict.mem  (Other) t_dict
+	then Some (DfaTranDict.find Other t_dict, letter)
+	else
+	  (* fold over dict to find the next transition *)
+	  if letter = Dict.last_letter || DfaTranDict.cardinal t_dict = 0 then None
+	  else 
+	    let next_letter =
+	      DfaTranDict.fold (fun tran _ next_so_far ->
+		match tran with
+		  | DCorrect l -> if compare l letter > 0 && compare l next_so_far < 0
+		    then l else next_so_far
+		  | Other -> failwith "shouldn't happen") t_dict '{' (* something after 'z' *) in
+	    if next_letter = '{' then None
+	    else Some (DfaTranDict.find (DCorrect next_letter) t_dict, next_letter)
 
   (* find the next string that satisfies the dfa from a given state and given
      letter as an outedge. None if there is no such edge *)
-  let find_next_edge my_dfa current_state (letter: char option) : string option =
+  let find_next_path my_dfa current_state (letter: char option) : string option =
     (* return None right away if the letter is last of alphabet *)
     if letter = Some (Dict.last_letter) then None 
     else
@@ -129,7 +130,7 @@ struct
 	match stack with
 	  | [] -> None
 	  | (str_so_far, state, next_letter)::tl ->
-	    match find_next_edge my_dfa state next_letter with
+	    match find_next_path my_dfa state next_letter with
 	      | None -> wall_search tl
 	      | Some path -> Some (str_so_far ^ path) in
       wall_search stack

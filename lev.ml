@@ -75,10 +75,8 @@ struct
     in find_matches_rec "" []
 
   let find_matches_time word distance dict =
-    let t1 = Unix.gettimeofday() in
     let word_nfa = Nfa.build word distance in
     let t2 = Unix.gettimeofday() in
-    Printf.printf "time to build nfa from word: %f\n" (t2-.t1);
     let word_dfa = to_dfa(word_nfa) in
     let t3 = Unix.gettimeofday() in
     Printf.printf "time to convert nfa to dfa: %f\n" (t3-.t2);
