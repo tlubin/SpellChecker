@@ -1,10 +1,5 @@
 TODO's LIST:
 
-looking at the timing breakdown for find_matches, the slowest part by far is the recursive
-function that traverses the dfa and dictionary. The slow part is probably in the next_valid_string
-function.
+1) is there a way to deal with swaps? I thought I read about it somewhere
 
-this needs to be sped up, so that means either making the code more efficient or using a trie
-and traversing the two simultaneously instead of keep calling next_valid_string
-
-i created a shell file that passes in the number of words in the dictionary as an argument to the ocaml program. from now on run main.sh to run the program.
+2) algorithm for appropriately weighting additions and subtractions in qwerty

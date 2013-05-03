@@ -29,6 +29,7 @@ SRC = \
 	nfa.ml \
 	lev.ml \
 	qwerty.ml \
+	score.ml \
 	main.ml \
 
 

@@ -67,15 +67,17 @@ struct
       maximum distance.
    *)
   let rec keyboard_word_distance kmap s1 s2 =
+    (* TODO!!! ALIGN THE STRINGS IN THE WAY THAT MAXIMIZES THE OVERLAPPING
+       CHARACTERS. insertions in the middle are still bad *)
     let rec helper s1 s2 dist =
       let l1 = String.length s1 in
       let l2 = String.length s2 in
       if l1 = 0 && l2 = 0 then
 	dist
       else if l1 > 0 && l2 = 0 then
-	dist + keyboard_max_distance * l1
+	dist + (keyboard_max_distance/2) * l1
       else if l1 = 0 && l2 > 0 then
-	dist + keyboard_max_distance * l2
+	dist + (keyboard_max_distance/2) * l2
       else
 	let c1 = String.get s1 0 in
 	let c2 = String.get s2 0 in

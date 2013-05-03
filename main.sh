@@ -2,7 +2,7 @@
 
 # file paths for dictionary and ranker
 DFILE="dict/dictionary"
-RFILE="dict/en_50k.txt"
+RFILE="dict/en_full.txt"
 
 # line lengths and names for each file
 DARGS=`wc -l $DFILE`
