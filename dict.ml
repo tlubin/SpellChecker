@@ -1,3 +1,7 @@
+(*let probes = ref 0;;
+
+let reset_probes () = probes := 0;; *)
+
 module type DICT =
 sig
   type t
@@ -37,6 +41,7 @@ struct
        the array and return the array *)
 
   let next_entry dict word =
+(*    incr probes; *)
     (* recursively find the next word, inclusive *)
     let rec helper (s:int) (e:int) : string =
       if e=s then
