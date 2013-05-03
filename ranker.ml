@@ -1,9 +1,8 @@
-
 module type RANKER =
 sig
   type t
   val create: string -> int -> t
-  val get_rank: t -> string -> int option
+  val get_rank: t -> string -> int
 end
 
 module Ranker : RANKER =
@@ -31,7 +30,7 @@ struct
 
   let get_rank ranker str = 
     try
-      Some (D.find str ranker)
-    with Not_found -> None
+      D.find str ranker
+    with Not_found -> 0
 
 end

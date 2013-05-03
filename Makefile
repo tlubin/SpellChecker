@@ -9,6 +9,8 @@ CAMLC = ocamlc
 CAMLOPT = ocamlopt
 CAMLDOC = ocamldoc
 CAMLFLAGS = -g
+STRC = str.cma
+STROPT = str.cmxa
 
 %.cmo: %.ml
 	$(CAMLC) $(CAMLFLAGS) -c $<
@@ -26,7 +28,9 @@ SRC = \
 	dfa.ml \
 	nfa.ml \
 	lev.ml \
+	qwerty.ml \
 	main.ml \
+
 
 OBJO = $(SRC:.ml=.cmo)
 OBJX = $(SRC:.ml=.cmx)
@@ -34,10 +38,10 @@ OBJX = $(SRC:.ml=.cmx)
 #Executable:
 
 $(PROG): $(OBJO)
-	$(CAMLC) $(CAMLFLAGS) $(OBJO) -o $(PROG)
+	$(CAMLC) $(CAMLFLAGS) $(STRC) $(OBJO) -o $(PROG)
 
 $(PROGOPT): $(OBJX)
-	$(CAMLOPT) $(OBJX) -o $(PROGOPT)
+	$(CAMLOPT) $(STROPT) $(OBJX) -o $(PROGOPT)
 
 doc: $(OBJO)
 	$(CAMLDOC) -html $(SRC)
