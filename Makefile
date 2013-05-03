@@ -30,6 +30,7 @@ SRC = \
 	lev.ml \
 	qwerty.ml \
 	score.ml \
+	menu.ml \
 	main.ml \
 
 
