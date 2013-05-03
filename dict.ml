@@ -19,7 +19,7 @@ end
 module Dict : DICT =
 struct
   type t = string array
-
+      
   let last_letter = 'z'
   let first_letter = 'a'
 
