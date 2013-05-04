@@ -11,7 +11,7 @@ let max_edit = 5;;
 type mode = Word | Sentence;;
 
 let strip str = 
-  Str.global_replace (Str.regexp "[^a-zA-Z\\s]") "" str
+  Str.global_replace (Str.regexp "[^a-zA-Z ]") "" str
 
 let get_word () =
   print_string "Enter word: ";
