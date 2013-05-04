@@ -10,22 +10,36 @@ let max_edit = 5;;
 
 type mode = Word | Sentence;;
 
+let strip str = 
+  Str.global_replace (Str.regexp "[^a-zA-Z\\s]") "" str
+
 let get_word () =
   print_string "Enter word: ";
-  read_line()
+  let input = String.trim (read_line()) in
+  strip input
 
 let get_line () =
   print_string "Enter sentence: ";
-  read_line()
+  let input = String.trim (read_line()) in
+  input
 
 let get_editd () =
   print_string "Enter edit distance: ";
   read_int()
 
+(** Get the current operation mode. *)
 let get_mode () =
-  print_string "Would you like to enter word mode (W) or sentence mode (S)? : ";
-  let x = read_line() in
-  if x = "W" then Word else Sentence
+  let rec get_mode_helper () : mode = 
+    print_string "Would you like to enter word mode (W) or sentence mode (S)? : ";
+    let x = String.trim (String.lowercase (read_line ())) in
+    if x = "w" then Word 
+    else if x = "s" then Sentence 
+    else (
+      print_string "That is not a valid choice. Please try again. \n";
+      get_mode_helper ()
+    )
+  in get_mode_helper ()
+  
 
 let get_top_matches dict word =
   let rec get_matches edit_d =
@@ -50,26 +64,28 @@ let main () =
   else
     (* Create the dictionary *)
     let dictionary = MyLev.create_dict Sys.argv.(2) (int_of_string Sys.argv.(1)) in
+    (* Print Welcome *)
+    Menu.print_header ();
     (* ask what mode to enter *)
     let mode = get_mode() in
     let do_action() =
       match mode with
-	| Word -> 
-	  (let word = get_word() in
-	  match get_top_matches dictionary word with
-	    | None -> Printf.printf "That is not close to a word!\n"
-	    | Some ms ->
-	      List.iter (fun (m, r, p, s) -> Printf.printf "%s %d %f %f\n" m r p s) ms)
-	| Sentence ->
-	  (let line = get_line() in
-	  let words = Str.split (Str.regexp " ") line in
-	  let corrected = List.map 
-	    (fun w -> match get_top_matches dictionary w with
-	      | None -> w
-	      | Some ((w,_,_,_)::_) -> w
-	      | Some [] -> failwith "shouldn't happen") words in
-	  List.iter (fun w -> Printf.printf "%s " w) corrected;
-	  Printf.printf "\n")
+      | Word -> 
+    	  (let word = get_word() in
+    	  match get_top_matches dictionary word with
+    	    | None -> Printf.printf "That is not close to a word!\n"
+    	    | Some ms ->
+    	      List.iter (fun (m, r, p, s) -> Printf.printf "%s %d %f %f\n" m r p s) ms)
+    	| Sentence ->
+    	  (let line = get_line() in
+    	  let words = Str.split (Str.regexp " ") line in
+    	  let corrected = List.map 
+    	    (fun w -> match get_top_matches dictionary w with
+    	      | None -> w
+    	      | Some ((w,_,_,_)::_) -> w
+    	      | Some [] -> failwith "shouldn't happen") words in
+    	  List.iter (fun w -> Printf.printf "%s " w) corrected;
+    	  Printf.printf "\n")
     in
     while true do
        do_action()
