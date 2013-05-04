@@ -1,7 +1,3 @@
-(*let probes = ref 0;;
-
-let reset_probes () = probes := 0;; *)
-
 module type DICT =
 sig
   type t
