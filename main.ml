@@ -33,7 +33,7 @@ let get_mode () =
     print_string "Would you like to enter word mode (W) or sentence mode (S)? : ";
     let x = String.trim (String.lowercase (read_line ())) in
     if x = "w" then Word 
-    else if x = "w" then Sentence 
+    else if x = "s" then Sentence 
     else (
       print_string "That is not a valid choice. Please try again. \n";
       get_mode_helper ()
