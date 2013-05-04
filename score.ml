@@ -27,7 +27,7 @@ struct
   let get_score_extra ms word =
     let get_info m = 
       let freq = Ranker.get_rank ranker m in
-      let prob = QwertyKey.keyboard_word_match keyboard m word in
+      let prob = QwertyKey.word_match keyboard m word in
       let score = (log10 (float_of_int (freq+1))) +. 10. *. prob in
       (m, freq, prob, score)
     in 
