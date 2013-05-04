@@ -26,6 +26,8 @@ sig
   (** debug function to print a dfa *)
   val print_dfa : t -> unit
 
+  val unit_tests : unit -> unit
+
 end
 
 module Dfa : DFA =
@@ -146,5 +148,22 @@ struct
       wall_search stack
 
   let print_dfa = A.print_automata
+
+  let unit_tests str =
+    let start = NfaStateSet.singleton (0,0) in
+    let state1 = NfaStateSet.singleton (1,1) in
+    let state2 = NfaStateSet.singleton (2,2) in
+    let state3 = NfaStateSet.singleton (3,3) in
+    let dfa = ref (singleton start) in
+    dfa := (add_transition !dfa start (DCorrect 'f') state1);
+    dfa := (add_final !dfa state1);
+    dfa := (add_transition !dfa start Other state2);
+    dfa := (add_transition !dfa state2 (DCorrect 'f') state3);
+    dfa := (add_final !dfa state3);
+    assert(next_valid_string !dfa "fa" = Some "gf");
+    assert(next_valid_string !dfa "a" = Some "af");
+    assert(next_valid_string !dfa "bz" = Some "cf");
+    assert(next_valid_string !dfa "eg" = Some "f");
+    assert(next_valid_string !dfa "ff" = Some "gf");
 
 end

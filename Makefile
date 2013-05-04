@@ -24,12 +24,12 @@ SRC = \
 	dict.ml \
 	type.ml \
 	ranker.ml \
+	qwerty.ml \
+	score.ml \
 	automata.ml \
 	dfa.ml \
 	nfa.ml \
 	lev.ml \
-	qwerty.ml \
-	score.ml \
 	menu.ml \
 	main.ml \
 

@@ -103,17 +103,17 @@ struct
 	  
   let has_final my_nfa states = NfaStateSet.exists (A.is_final my_nfa) states
 
-
-  (* THIS FUNCTION SHOULD BE CLEANED UP *)
+  (* build iteratively by adding transitions to neighboring states. algorithm from
+     http://blog.notdot.net/2010/07/Damn-Cool-Algorithms-Levenshtein-Automata *)
   let build str edit_d = 
     let my_nfa = ref (A.singleton (0,0)) in
     let len = String.length str in
-    let add_edges () =
+    let build_iter () =
       let i = ref 0 in
       let e = ref 0 in
       while !i < len do
 	while !e <= edit_d do
-	  (* add transitions from each state *)
+	  (* add the correct transitions from each state *)
           List.iter (fun t_type -> 
             match t_type with
               | NCorrect _ -> 
@@ -125,21 +125,17 @@ struct
                   my_nfa := (A.add_transition !my_nfa  (!i,!e) Anyi (!i, !e+1))
               | Anys -> if !e < edit_d then 
                   my_nfa := (A.add_transition !my_nfa (!i,!e) Anys (!i+1, !e+1))) nfa_tran_list;
+	  (* on the last time through add final states and transitions up *)
+	  if !i = len - 1 then
+	   ( my_nfa := A.add_final !my_nfa (len, !e);
+	     if !e < edit_d then
+	       my_nfa := A.add_transition !my_nfa (len, !e) Anyi (len, !e+1));
           e := !e + 1
 	done;
 	i := !i + 1;
 	e := 0
       done in
-    let add_final_states () =
-      let e = ref 0 in
-      while !e <= edit_d do
-	my_nfa := A.add_final !my_nfa (len, !e);
-	if !e < edit_d then
-	  my_nfa := A.add_transition !my_nfa (len, !e) Anyi (len, !e+1);
-	e := !e + 1
-      done in
-    add_edges();
-    add_final_states();
+    build_iter();
     !my_nfa
 
   let print_nfa = A.print_automata
