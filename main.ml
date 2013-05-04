@@ -21,7 +21,7 @@ let get_word () =
 let get_line () =
   print_string "Enter sentence: ";
   let input = String.trim (read_line()) in
-  input
+  strip input
 
 let get_editd () =
   print_string "Enter edit distance: ";
