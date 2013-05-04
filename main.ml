@@ -10,18 +10,20 @@ let max_edit = 5;;
 
 type mode = Word | Sentence;;
 
-let strip str = 
-  Str.global_replace (Str.regexp "[^a-zA-Z\\s]") "" str
+(* prepare a string by stripping bad characters, & lowercasing *)
+let prepare str = 
+  let stripped = Str.global_replace (Str.regexp "[^a-zA-Z ]") "" str in
+  String.lowercase stripped
 
 let get_word () =
   print_string "Enter word: ";
   let input = String.trim (read_line()) in
-  strip input
+  prepare input
 
 let get_line () =
   print_string "Enter sentence: ";
   let input = String.trim (read_line()) in
-  strip input
+  prepare input
 
 let get_editd () =
   print_string "Enter edit distance: ";
@@ -72,11 +74,14 @@ let main () =
       match mode with
       | Word -> 
     	  (let word = get_word() in
-    	  match get_top_matches dictionary word with
-    	    | None -> Printf.printf "That is not close to a word!\n"
-    	    | Some ms ->
-    	      List.iter (fun (m, r, p, s) -> Printf.printf "%s %d %f %f\n" m r p s) ms)
-    	| Sentence ->
+        (if word = "" then Printf.printf "%s\n" "Try again. Please input alphabetic characters."
+    	    else 
+          match get_top_matches dictionary word with
+      	  | None -> Printf.printf "That is not close to a word!\n"
+      	  | Some ms ->
+      	    List.iter (fun (m, r, p, s) -> Printf.printf "%s %d %f %f\n" m r p s) ms)
+    	  )
+      | Sentence ->
     	  (let line = get_line() in
     	  let words = Str.split (Str.regexp " ") line in
     	  let corrected = List.map 
