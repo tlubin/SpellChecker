@@ -126,4 +126,4 @@ let get_probes() =
 ;;
 
 
-main2();;
+main();;

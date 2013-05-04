@@ -5,18 +5,27 @@ open Dict
 
 module type LEV =
 sig
+
+  (** type of the dictionary *)
   type dict_t
+
+  (** initializes the dictionary to be passed into find_matches *)
   val create_dict : string -> int -> dict_t
+
+  (** given a string and edit distance and dictionary, returnback a 
+      list of string matches that are in the dictionary *)
   val find_matches : string -> int -> dict_t -> string list
-(*  val find_matches_time : string -> int -> dict_t -> string list *)
+
 end
 
 module Levenshtein (Nfa: NFA) (Dfa: DFA) (D: DICT) : LEV =
 struct
 
   type dict_t = D.t
+
   let create_dict = D.create
 
+  (* NEED TO COMMENT THIS STUFF *)
   let add_tran my_dfa (tran: nfa_tran) (orig: dfa_state) (dest: dfa_state) = 
     match tran with
       | Anyi | Anys -> Dfa.add_transition my_dfa orig Other dest
