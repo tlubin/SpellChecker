@@ -13,6 +13,7 @@ type mode = Word | Sentence | File;;
 (** prepare a string by stripping bad characters, & lowercasing *)
 let prepare str = 
   let stripped = Str.global_replace (Str.regexp "[^a-zA-Z ]") "" str in
+  let stripped = Str.global_replace (Str.regexp "[ ]+") " " stripped in
   String.lowercase stripped
 
 (** ask for and get an input word *)
@@ -111,7 +112,9 @@ let main () =
             let words = Str.split (Str.regexp " ") line in
             List.iteri (fun word_num wd -> 
               match MyLev.find_matches wd dictionary with
-              | [] -> ()
+              | [] -> 
+                  Printf.printf "(%d,%d): %s\t" line_num word_num wd;
+                  Printf.printf "%s\n" "<No better suggestions available>"
               | lst -> 
                 let lst = cut_down 3 lst in
 		(* word is spelled correctly *)
