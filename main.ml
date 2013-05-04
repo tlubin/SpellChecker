@@ -8,23 +8,44 @@ module MyLev = Levenshtein (Nfa) (Dfa) (Dict)
 
 let max_edit = 5;;
 
-type mode = Word | Sentence;;
+type mode = Word | Sentence | File;;
 
-(* prepare a string by stripping bad characters, & lowercasing *)
+(** prepare a string by stripping bad characters, & lowercasing *)
 let prepare str = 
   let stripped = Str.global_replace (Str.regexp "[^a-zA-Z ]") "" str in
   String.lowercase stripped
 
+(** ask for and get an input word *)
 let get_word () =
   print_string "Enter word: ";
   let input = String.trim (read_line()) in
   prepare input
 
+(** ask for and get an input sentence *)
 let get_line () =
   print_string "Enter sentence: ";
   let input = String.trim (read_line()) in
   prepare input
 
+(** ask for and get an input from file *)
+let get_file () = 
+  print_string "Enter absolute or relative path for file: ";
+  let filepath = String.trim (read_line()) in
+  let input_ch = open_in filepath in
+  let lines = ref [] in
+  try
+    while true do
+      let clean_line = prepare (String.trim (input_line input_ch)) in
+      lines := clean_line :: !lines
+    done;
+    !lines
+  with End_of_file ->
+    close_in input_ch;
+    List.rev !lines
+
+
+
+(** ask for and get an edit distance *)
 let get_editd () =
   print_string "Enter edit distance: ";
   read_int()
@@ -32,17 +53,19 @@ let get_editd () =
 (** Get the current operation mode. *)
 let get_mode () =
   let rec get_mode_helper () : mode = 
-    print_string "Would you like to enter word mode (W) or sentence mode (S)? : ";
+    print_string "Would you like to enter word mode (W), sentence mode (S), or file mode (F)? : ";
     let x = String.trim (String.lowercase (read_line ())) in
-    if x = "w" then Word 
-    else if x = "s" then Sentence 
-    else (
+    match x with
+    | "w" -> Word 
+    | "s" -> Sentence
+    | "f" -> File
+    | _ -> (
       print_string "That is not a valid choice. Please try again. \n";
       get_mode_helper ()
     )
   in get_mode_helper ()
   
-
+(** returns the top matches for a specified dictionary and word *)
 let get_top_matches dict word =
   let rec get_matches edit_d =
     if edit_d >= max_edit then None
@@ -50,14 +73,25 @@ let get_top_matches dict word =
       let matches = MyLev.find_matches word edit_d dict in
       (* run until you find a match and go one further if you have less than 3 *)
       match matches with
-	| [] -> get_matches (edit_d+1)
-	| ms -> if List.length ms <= 3 && edit_d <> 0 && Score.all_low ms word
-	  then get_matches (edit_d+1) else Some ms in
+    	| [] -> get_matches (edit_d+1)
+    	| ms -> 
+          if List.length ms <= 3 && edit_d <> 0 && Score.all_low ms word
+	        then get_matches (edit_d+1) else Some ms 
+  in
   match get_matches 0 with
-    | None -> None
-    | Some ms ->
+  | None -> None
+  | Some ms ->
       Some (Score.get_score_extra ms word)
 
+(** helper function to cut down a list of "suggestions" *)
+let rec cut_down threshold lst =
+  if threshold <= 0 then []
+  else
+    match lst with
+    | [] -> []
+    | (sug,_,_,_)::tl -> sug :: (cut_down (threshold - 1) tl)
+
+(** main event loop for our program *)
 let main () =
   (* If user attempts to run spellchecker directly, provide correct usage and exit *)
   if Array.length Sys.argv <> 5 then
@@ -91,6 +125,24 @@ let main () =
     	      | Some [] -> failwith "shouldn't happen") words in
     	  List.iter (fun w -> Printf.printf "%s " w) corrected;
     	  Printf.printf "\n")
+      | File ->
+        (let line_arr = get_file() in
+          List.iteri (fun line_num line ->
+            let words = Str.split (Str.regexp " ") line in
+            List.iteri (fun word_num wd -> 
+              match get_top_matches dictionary wd with
+              | None -> ()
+              | Some [] -> failwith "should not happen"
+              | Some lst -> 
+                  let lst = cut_down 3 lst in
+                  if List.length lst = 1 && List.hd lst = wd then ()
+                  else (
+                    Printf.printf "(%d,%d): %s\t" line_num word_num wd;
+                    Printf.printf "%s\n" (String.concat ", " lst)
+                  )
+            ) words
+          ) line_arr
+        )
     in
     while true do
        do_action()
