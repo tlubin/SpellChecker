@@ -106,20 +106,19 @@ let main2 () =
 ;;
 
 (* way to get number of probes for stats *)
-(*
+
 let get_probes() =
     let dictionary = MyLev.create_dict Sys.argv.(2) (int_of_string Sys.argv.(1)) in
     let do_action() =
       let word = get_word() in
       let edit_d = get_editd() in
       let matches = MyLev.find_matches word edit_d dictionary in
-      Printf.printf "%d\n" !probes;
-      reset_probes()
+      List.iter print_string matches
     in
     while true do
       do_action()
     done
 ;;
-*)
 
-main();;
+
+main2();;

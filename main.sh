@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # file paths for dictionary and ranker
-DFILE="dict/dictionary"
+DFILE="dict/dict_500k"
 RFILE="dict/en_50k.txt"
 
 # line lengths and names for each file
