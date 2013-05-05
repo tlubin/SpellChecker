@@ -19,23 +19,34 @@ type input = Menu | Input of string
   be skipped and does not need a match *)
 let do_skip str = Str.string_match (Str.regexp ".*-.*") str 0
 
-(** prepare a string by stripping bad characters, & lowercasing *)
-let prepare str = 
+(** prepare a string line by stripping bad characters, & lowercasing *)
+let prepare_line str = 
   let stripped = Str.global_replace (Str.regexp "[^a-zA-Z- ]") "" str in
   let stripped = Str.global_replace (Str.regexp "[ ]+") " " stripped in
   String.lowercase stripped
+
+(** prepare a string word *)
+let prepare_word str = 
+  let stripped = Str.global_replace (Str.regexp "[^a-zA-Z- ]") "" str in
+  let stripped = 
+    (if (Str.string_match (Str.regexp "[a-zA-Z-]* ") stripped 0) then 
+      Str.matched_string stripped
+    else stripped
+    )
+  in
+  String.trim (String.lowercase stripped)
 
 (** ask for and get an input word *)
 let get_word () : input =
   print_string "Enter word: ";
   let input = String.trim (read_line()) in
-  if input = "menu()" then Menu else Input(prepare input)
+  if input = "menu()" then Menu else Input(prepare_word input)
 
 (** ask for and get an input sentence *)
 let get_line () : input =
   print_string "Enter sentence: ";
   let input = String.trim (read_line()) in
-  if input = "menu()" then Menu else Input (prepare input)
+  if input = "menu()" then Menu else Input (prepare_line input)
 
 (** ask for and get an input from file *)
 let get_file () : input = 
@@ -53,7 +64,7 @@ let extract_from_file filepath : ((int*int*string) list) option =
     let line_num = ref 1 in
     try
       while true do
-        let clean_line = prepare (String.trim (input_line input_ch)) in
+        let clean_line = prepare_line (String.trim (input_line input_ch)) in
 	let words_on_line = Str.split (Str.regexp " ") clean_line in
 	List.iteri (fun word_num wd ->
 	  if not (do_skip wd) then 
@@ -182,7 +193,7 @@ let main () =
 	    mode := (get_mode())
 	with Sys_error _ ->
 	  print_string ("Couldn't locate the README. Go to " ^ 
-			    "https://github.com/tlubin/SpellChecker for more information.\n");
+			    "http://github.com/tlubin/SpellChecker for more information.\n");
 	  mode := (get_mode())
     in
     while true do

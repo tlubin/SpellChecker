@@ -11,3 +11,8 @@ blam basteri loooooooooooooook    g
 
 2) File Mode:
     -Deal with file not found exception
+
+    -Ignore Capital words
+    -Ignore Hyphenated
+
+3) Quit program
