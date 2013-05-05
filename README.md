@@ -26,14 +26,14 @@ MODES:
   -[S] Sentence mode
           Input a sentence, and you will get an auto-corrected version of your sentence, based on Correctr's top ranked suggestion for each errorneous word detected. 
 
-          Note that at this time, Correctr will not attempt to alter words with non-alphabetic input in this mode.
+          Note that at this time, Correctr will clean all words with non-alphabetic input in this mode.
 
   -[F] File mode
           Input a filepath, and you will get notified of any alphabetic words in your file that may be spelling errors. The output will be of the format:
 
           (Line Number, Word Number) | Original Word | Top 3 Correctr Suggestions - comma separated
 
-          Note that at this time, Correctr will ignore all words with non-alphabetic input in this mode.
+          Note that at this time, Correctr will clean all words with non-alphabetic input in this mode.
 
   -[H] Help mode
           Print instructions. (This file)
