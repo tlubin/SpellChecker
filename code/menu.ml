@@ -12,5 +12,10 @@ let print_header () =
 
 
 let print_mode_prompt () =
-  p ("Would you like to enter word mode (W), sentence mode (S), file mode (F), " ^
+  print_string ("Would you like to enter word mode (W), sentence mode (S), file mode (F), " ^
      "help (H), or quit (Q)? : ")
+
+let print_spaces n =
+  if n <= 0 then print_string "     "
+  else 
+    print_string (String.make n ' ')

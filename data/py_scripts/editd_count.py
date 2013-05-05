@@ -1,3 +1,6 @@
+# script to calculate the number of unique strings within a certain edit distance of
+# an input string
+
 import sys
 
 alphabet = 'abcdefghijklmnopqrstuvwxyz'

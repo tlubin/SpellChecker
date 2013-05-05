@@ -11,10 +11,10 @@ QUICKSTART:
     - Make
   2. To start, run:
       $make
-      $./main.sh
+      $./correctr
 
 MODES:
-  -Type menu() to return from a inside a mode, to the menu prompt to switch modes
+  -Type menu() to return from inside a mode to the menu prompt to switch modes
 
   -[W] Word mode
           Input a word, and you will get a ranked output (highest to lowest) of all suggestions for corrections in the following format:
@@ -24,7 +24,7 @@ MODES:
           Note that at this time, Correctr will not make suggestions for non-alphabetic input.
 
   -[S] Sentence mode
-          Input a sentence, and you will get an auto-corrected version of your sentence, based on Correctr's top ranked suggestion for each errorneous word detected. 
+          Input a sentence, and you will get an auto-corrected version of your sentence, based on Correctr's top ranked suggestion for each erroneous word detected. 
 
           Note that at this time, Correctr will clean all words with non-alphabetic input in this mode.
 

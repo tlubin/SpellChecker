@@ -1,3 +1,6 @@
+# create a clean dictionary by removing all words
+# that contain non-alphabetic characters
+
 from __future__ import print_function
 import re
 

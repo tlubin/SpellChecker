@@ -163,18 +163,22 @@ let main () =
 	     match extract_from_file filename with
 	       | None -> ()
 	       | Some words ->
+		 print_string "\nIncorrect Spellings with Suggestions:\n";
+		 print_string "---------------------------------------\n";
 		 (List.iter (fun (line_num,word_num,wd) ->
 		   if Dict.in_dict dictionary wd then ()
 		   else 
 		     match MyLev.find_matches wd dictionary with
 		       | [] ->
 		       (* no suggestions for misspelled word *)
-			 (Printf.printf "(%d,%d): %s\t" line_num word_num wd;
+			 (Printf.printf "(%d,%d): %s" line_num word_num wd;
+			  Menu.print_spaces (20 - (String.length wd));
 			  Printf.printf "Unable to find a correction\n")
 		       | lst -> 
 			 (let lst = cut_down 3 lst in
 			  (* print correction and location in file *)
-			  Printf.printf "(%d,%d): %s\t" line_num word_num wd;
+			  Printf.printf "(%d,%d): %s" line_num word_num wd;
+			  Menu.print_spaces (20 - (String.length wd));
 			  Printf.printf "%s\n" (String.concat ", " lst))
 		 ) words;
 		 print_string "\n")

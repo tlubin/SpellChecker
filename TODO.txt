@@ -1,9 +1,0 @@
-TODO's LIST:
-
-1) is there a way to deal with swaps? I thought I read about it somewhhere
-
-2) algorithm for appropriately weighting additions and subtracctions in qwerty
-
-3) we dont have to do thsi misspelles thingk
-
-4) sample mispellt woirds
