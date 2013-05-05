@@ -13,6 +13,9 @@ sig
   (** return the next valid entry in the dictionary at or past the input *)
   val next_entry: t -> string -> string
 
+  (** return whether a given string is in the dictionary *)
+  val in_dict: t -> string -> bool
+
 (*  val unit_tests : unit -> unit *)
 end
 
@@ -56,6 +59,9 @@ struct
       else (* if compared > 0 then *) helper (mid+1) e)
     in
     helper 0 ((Array.length dict)-1)
+
+  let in_dict dict word =
+    next_entry dict word = word
     
 (*  (*testing*)
   let unit_tests () =

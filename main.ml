@@ -44,7 +44,6 @@ let get_file () =
     List.rev !lines
 
 
-
 (** ask for and get an edit distance *)
 let get_editd () =
   print_string "Enter edit distance: ";
@@ -81,7 +80,7 @@ let main () =
     (print_endline usage; exit 0)
   else
     (* Create the dictionary *)
-    let dictionary = MyLev.create_dict Sys.argv.(2) (int_of_string Sys.argv.(1)) in
+    let dictionary = Dict.create Sys.argv.(2) (int_of_string Sys.argv.(1)) in
     (* Print Welcome *)
     Menu.print_header ();
     (* ask what mode to enter *)
@@ -110,17 +109,18 @@ let main () =
           List.iteri (fun line_num line ->
             let words = Str.split (Str.regexp " ") line in
             List.iteri (fun word_num wd -> 
-              match MyLev.find_matches wd dictionary with
-              | [] -> ()
-              | lst -> 
-                let lst = cut_down 3 lst in
-		(* word is spelled correctly *)
-                if List.length lst = 1 && List.hd lst = wd then ()
-                else (
-		  (* print correction and location in file *)
-                  Printf.printf "(%d,%d): %s\t" line_num word_num wd;
-                  Printf.printf "%s\n" (String.concat ", " lst)
-                )
+	      if Dict.in_dict dictionary wd then ()
+	      else 
+		match MyLev.find_matches wd dictionary with
+		  | [] ->
+		    (* no suggestions for misspelled word *)
+		    (Printf.printf "(%d,%d): %s\t" line_num word_num wd;
+		     Printf.printf "Unable to find a correction\n")
+		  | lst -> 
+                    (let lst = cut_down 3 lst in
+		    (* print correction and location in file *)
+                    Printf.printf "(%d,%d): %s\t" line_num word_num wd;
+                    Printf.printf "%s\n" (String.concat ", " lst))
             ) words
           ) line_arr
         )

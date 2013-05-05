@@ -7,27 +7,17 @@ open Dict
 module type LEV =
 sig
 
-  (** type of the dictionary *)
-  type dict_t
-
-  (** initializes the dictionary to be passed into find_matches *)
-  val create_dict : string -> int -> dict_t
-
   (** given a string and dictionary, return back a list of string matches
       that are in the dictionary and "closest" in terms of edit distance.
       also give back scoring information *)
-  val find_matches : string -> dict_t -> (string*Score.score) list
+  val find_matches : string -> Dict.t -> (string*Score.score) list
 
 (*  val unit_tests: unit -> unit *)
 
 end
 
-module Levenshtein (Nfa: NFA) (Dfa: DFA) (D: DICT) : LEV =
+module Levenshtein (Nfa: NFA) (Dfa: DFA) (D: DICT with type t = Dict.t) : LEV =
 struct
-
-  type dict_t = D.t
-
-  let create_dict = D.create
 
   (* how far to potentially search for a match *)
   let max_edit = 5;;
