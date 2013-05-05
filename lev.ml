@@ -12,7 +12,7 @@ sig
       also give back scoring information *)
   val find_matches : string -> Dict.t -> (string*Score.score) list
 
-(*  val unit_tests: unit -> unit *)
+  val unit_tests: unit -> unit
 
 end
 
@@ -114,5 +114,10 @@ struct
     in 
     let matches = get_matches 0 in
     Score.get_score matches word
+
+  let unit_tests () = 
+    let nfa = Nfa.build "food" 1 in
+    let dfa = to_dfa nfa in
+    Dfa.print_dfa dfa;
 
 end
