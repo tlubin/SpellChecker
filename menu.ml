@@ -9,10 +9,8 @@ let print_header () =
   p "    _|_|_|    _|_|    _|        _|          _|_|_|    _|_|_|      _|_|  _|        ";
   p "                                                                                                                         ";
   ()
-;;
 
-(*let print_menu () =
-  p "==========================================================";
-  p "[W] Enter Word Mode                                       ";
-  p "[S] Enter Sentence Mode                                   ";
-  p "[Q] "*)
+
+let print_mode_prompt () =
+  p ("Would you like to enter word mode (W), sentence mode (S), file mode (F), " ^
+     "help (H), or quit (Q)? : ")

@@ -8,4 +8,4 @@ RFILE="dict/en_50k.txt"
 DARGS=`wc -l $DFILE`
 RARGS=`wc -l $RFILE`
 
-./spellcheckeropt $DARGS $RARGS
+./spellchecker $DARGS $RARGS

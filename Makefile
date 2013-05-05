@@ -1,19 +1,12 @@
 # Makes our program
 PROG = spellchecker
-PROGOPT = spellcheckeropt
 
 # Setup
 LIBS = \
 
-CAMLC = ocamlc
 CAMLOPT = ocamlopt
 CAMLDOC = ocamldoc
-CAMLFLAGS = -g
-STRC = str.cma
-STROPT = str.cmxa
-
-%.cmo: %.ml
-	$(CAMLC) $(CAMLFLAGS) -c $<
+STR = str.cmxa
 
 %.cmx: %.ml
 	$(CAMLOPT) -c $<
@@ -34,28 +27,19 @@ SRC = \
 	main.ml \
 
 
-OBJO = $(SRC:.ml=.cmo)
-OBJX = $(SRC:.ml=.cmx)
+OBJ = $(SRC:.ml=.cmx)
 
 #Executable:
 
-$(PROG): $(OBJO)
-	$(CAMLC) $(CAMLFLAGS) $(STRC) $(OBJO) -o $(PROG)
+$(PROG): $(OBJ)
+	$(CAMLOPT) $(STR) $(OBJ) -o $(PROG)
 
-$(PROGOPT): $(OBJX)
-	$(CAMLOPT) $(STROPT) $(OBJX) -o $(PROGOPT)
-
-doc: $(OBJO)
+doc: $(OBJ)
 	$(CAMLDOC) -html $(SRC)
 
 # Other
 
 all: $(PROG)
 
-opt: $(PROGOPT)
-
 clean: 
 	rm -rf *.cmo *.cmi *.cmx *.o *.html *.css $(PROG) $(PROGOPT)
-
-#.DEFAULT_GOAL := $(PROG)
-#.PHONY: doc build run clean opt

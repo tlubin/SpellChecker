@@ -5,3 +5,9 @@ TODO's LIST:
 2) algorithm for appropriately weighting additions and subtracctions in qwerty
 
 3) we dont have to do thsi misspelles thingk
+
+blam basteri loooooooooooooook    g
+
+
+2) File Mode:
+    -Deal with file not found exception
