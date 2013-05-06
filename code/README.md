@@ -21,7 +21,7 @@ MODES:
           
           Suggestion | Frequency Score | Keyboard Distance Score (truncated) | Aggregate Score (truncated)
 
-          Note that at this time, Correctr will not make suggestions for non-alphabetic input.
+          Note that at this time, Correctr will clean all words that have non-alphabetic input. Suggestions will not be given for hyphenated words.
 
   -[S] Sentence mode
           Input a sentence, and you will get an auto-corrected version of your sentence, based on Correctr's top ranked suggestion for each erroneous word detected. 
